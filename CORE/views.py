@@ -1,4 +1,5 @@
 import json
+import operator
 
 from django.http import JsonResponse
 from django.shortcuts import Http404
@@ -12,6 +13,8 @@ from .serializers import MovieListSerializer, GenreListSerializer, GenreDetailsS
 from .models import Media, Video, Genre
 from .utils import Tmdb
 import random
+from django.db.models import Q
+from functools import reduce
 
 
 # Create your views here.
@@ -113,3 +116,25 @@ class MovieList(APIView):
 
         serializer = MovieListSerializer(sorted_movies[:count] if count else sorted_movies, many=True)
         return Response(serializer.data)
+
+
+class Search(APIView):
+    def get(self, request, format=None):
+        q = request.GET.get('q')
+        q_list = q.split(' ')
+
+        search_filters = []
+        for key in q_list:
+            search_filters.append(Q(name__icontains=key))
+            search_filters.append(Q(description__icontains=key))
+            search_filters.append(Q(genre__icontains=key))
+
+        video = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by(
+            '-popularity',
+            '-rating',
+            '-release_date',
+            '-timestamp'
+        )
+        serializer = MovieListSerializer(video, many=True)
+        return Response(serializer.data)
+
