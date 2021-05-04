@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Media, Video
+from .models import Media, Video, Genre
 
 
 # Register your models here.
@@ -10,8 +10,14 @@ class MediaAdmin(admin.ModelAdmin):
 
 class VideoAdmin(admin.ModelAdmin):
     meta = Video
-    list_display = ['list', 'name', 'location', 'genre', 'type', 'tmdb_id', ]
+    list_display = ['tmdb_id', 'name', 'collection', 'location', 'genre', 'type', 'popularity', 'release_date', 'rating']
+
+
+class GenreAdmin(admin.ModelAdmin):
+    meta = Genre
+    list_display = ['name', 'tmdb_id', ]
 
 
 admin.site.register(Media, MediaAdmin)
 admin.site.register(Video, VideoAdmin)
+admin.site.register(Genre, GenreAdmin)

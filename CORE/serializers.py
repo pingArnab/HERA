@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Media, Video
+from .models import Media, Video, Genre
 
 
 class MovieCollectionListSerializer(serializers.ModelSerializer):
@@ -38,3 +38,42 @@ class MovieDetailsSerializer(serializers.ModelSerializer):
         fields = (
             'name', 'description', 'tmdb_id', 'background_image', 'logo', 'genre', 'location'
         )
+
+
+class MovieListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = (
+             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genre', 'popularity', 'timestamp', 'rating', 'release_date'
+        )
+
+
+class GenreListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = (
+            'tmdb_id', 'name'
+        )
+
+
+class GenreMovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = (
+            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genre'
+        )
+
+
+class GenreDetailsSerializer(serializers.ModelSerializer):
+    movie_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Genre
+        fields = (
+            'tmdb_id', 'name', 'movie_list'
+        )
+
+    @staticmethod
+    def get_movie_list(obj):
+        parts = Video.objects.filter(genre__icontains=obj.tmdb_id)
+        return GenreMovieSerializer(parts, many=True).data

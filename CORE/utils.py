@@ -14,3 +14,7 @@ class Tmdb:
             api_url=self.API_URL, api=api, parameter=parameter,  api_key=self.API_KEY)
         return requests.get(url).json()
 
+    def validate_genre(self):
+        a = self.API_KEY
+        return False
+
