@@ -1,0 +1,9 @@
+/.idea
+/.vscode
+/venv
+/staticfiles
+desktop.ini
+__pycache__
+___*
+????_*\.py
+*.log
