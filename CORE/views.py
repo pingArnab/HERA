@@ -104,13 +104,13 @@ class MovieList(APIView):
     def get(self, request, sort_type=None, count=None, format=None):
         movies = Video.objects.filter(type='M')
         if str(sort_type).lower().strip() == 'popular':
-            sorted_movies = movies.order_by('-popularity', '-rating', '-release_date', '-timestamp')
+            sorted_movies = movies.order_by('-popularity')
         elif str(sort_type).lower().strip() == 'latest':
-            sorted_movies = movies.order_by('-release_date','-popularity',  '-rating', '-timestamp')
+            sorted_movies = movies.order_by('-release_date')
         elif str(sort_type).lower().strip() == 'top-rated':
-            sorted_movies = movies.order_by('-rating', '-popularity', '-release_date', '-timestamp')
+            sorted_movies = movies.order_by('-rating')
         elif str(sort_type).lower().strip() == 'newly-added':
-            sorted_movies = movies.order_by('-timestamp', '-popularity', '-rating', '-release_date')
+            sorted_movies = movies.order_by('-timestamp')
         else:
             sorted_movies = movies
 
@@ -129,12 +129,11 @@ class Search(APIView):
             search_filters.append(Q(description__icontains=key))
             search_filters.append(Q(genre__icontains=key))
 
-        video = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by(
-            '-popularity',
-            '-rating',
-            '-release_date',
-            '-timestamp'
-        )
+        video = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by('-popularity')
         serializer = MovieListSerializer(video, many=True)
         return Response(serializer.data)
 
+
+class MongoDb(APIView):
+    def get(self, request, format=None):
+        return Response({'mongoBD': 'mongoDB'})

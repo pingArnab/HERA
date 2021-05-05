@@ -17,4 +17,7 @@ urlpatterns = [
     path('random-media/', views.RandomMedia.as_view()),
 
     path('search/', views.Search.as_view()),
+
+
+    path('mongodb/', views.MongoDb.as_view()),
 ]

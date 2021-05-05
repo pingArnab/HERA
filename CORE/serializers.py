@@ -75,5 +75,5 @@ class GenreDetailsSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_movie_list(obj):
-        parts = Video.objects.filter(genre__icontains=obj.tmdb_id)
+        parts = Video.objects.filter(genre__icontains=obj.tmdb_id).order_by('-popularity')
         return GenreMovieSerializer(parts, many=True).data
