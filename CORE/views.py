@@ -15,6 +15,8 @@ from .utils import Tmdb
 import random
 from django.db.models import Q
 from functools import reduce
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 
 
 # Create your views here.
@@ -134,6 +136,8 @@ class Search(APIView):
         return Response(serializer.data)
 
 
+@permission_classes([IsAuthenticated])
 class MongoDb(APIView):
+
     def get(self, request, format=None):
         return Response({'mongoBD': 'mongoDB'})
