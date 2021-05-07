@@ -19,8 +19,6 @@ from django.conf.urls import url
 from django.views.static import serve
 from django.conf.urls.static import static
 from django.conf import settings
-from rest_framework_simplejwt import views as jwt_views
-from . import auth
 
 API_PATH = 'api/v1/'
 
@@ -29,15 +27,12 @@ if settings.DEBUG:
     urlpatterns += [path('admin/', admin.site.urls)]
 urlpatterns += [
 
-                   path(API_PATH + 'token/', auth.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-                   path(API_PATH + 'token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-                   path(API_PATH + 'token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
 
-                   path(API_PATH, include('CORE.urls')),
                    path(API_PATH, include('djoser.urls')),
                    # path(API_PATH, include('djoser.urls.authtoken')),
 
                    path(API_PATH, include('CORE.urls')),
+                   path(API_PATH + 'user/', include('USER.urls')),
 
                    url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
                ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

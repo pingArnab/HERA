@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'djoser',
 
-    'CORE'
+    'CORE',
+    'USER'
 ]
 
 CORS_ALLOWED_ORIGINS = [

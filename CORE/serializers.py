@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Media, Video, Genre
+from .models import Media, Video, Genre, TVShow
 
 
 class MovieCollectionListSerializer(serializers.ModelSerializer):
@@ -40,14 +40,6 @@ class MovieDetailsSerializer(serializers.ModelSerializer):
         )
 
 
-class MovieListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Video
-        fields = (
-             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genre', 'popularity', 'timestamp', 'rating', 'release_date'
-        )
-
-
 class GenreListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
@@ -56,24 +48,77 @@ class GenreListSerializer(serializers.ModelSerializer):
         )
 
 
-class GenreMovieSerializer(serializers.ModelSerializer):
+# ------------------------- new -------------------------
+class MovieListSerializer(serializers.ModelSerializer):
+    genres = serializers.SerializerMethodField()
+
     class Meta:
         model = Video
         fields = (
-            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genre'
+            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
+            'release_date'
+        )
+
+    @staticmethod
+    def get_genres(obj):
+        genre_list = obj.genre.all()
+        return GenreSerializer(genre_list, many=True).data
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = (
+            'tmdb_id', 'name'
         )
 
 
+class GenreMovieSerializer(serializers.ModelSerializer):
+    genres = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Video
+        fields = (
+            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'rating'
+        )
+
+    @staticmethod
+    def get_genres(obj):
+        genre_list = obj.genre.all()
+        return GenreSerializer(genre_list, many=True).data
+
+
+class GenreTVShowSerializer(serializers.ModelSerializer):
+    genres = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TVShow
+        fields = (
+            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'season_count', 'rating'
+        )
+
+    @staticmethod
+    def get_genres(obj):
+        genre_list = obj.genre.all()
+        return GenreSerializer(genre_list, many=True).data
+
+
 class GenreDetailsSerializer(serializers.ModelSerializer):
-    movie_list = serializers.SerializerMethodField()
+    movies = serializers.SerializerMethodField()
+    tv_shows = serializers.SerializerMethodField()
 
     class Meta:
         model = Genre
         fields = (
-            'tmdb_id', 'name', 'movie_list'
+            'tmdb_id', 'name', 'movies', 'tv_shows'
         )
 
     @staticmethod
-    def get_movie_list(obj):
-        parts = Video.objects.filter(genre__icontains=obj.tmdb_id).order_by('-popularity')
-        return GenreMovieSerializer(parts, many=True).data
+    def get_movies(obj):
+        movies_list = obj.video_set.filter(type='M').order_by('-popularity')
+        return GenreMovieSerializer(movies_list, many=True).data
+
+    @staticmethod
+    def get_tv_shows(obj):
+        tv_show_list = obj.tvshow_set.all().order_by('-popularity')
+        return GenreTVShowSerializer(tv_show_list, many=True).data
