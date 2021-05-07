@@ -24,7 +24,7 @@ class SingleMovieCollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
         fields = (
-            'name', 'description', 'tmdb_id', 'background_image', 'poster_image', 'parts'
+            'name', 'description', 'tmdb_id', 'background_image', 'poster_image', 'parts', 'logo', 'background_image'
         )
 
     def get_parts(self, obj):
@@ -56,7 +56,7 @@ class MovieListSerializer(serializers.ModelSerializer):
         model = Video
         fields = (
             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
-            'release_date'
+            'release_date', 'logo', 'background_image'
         )
 
     @staticmethod
