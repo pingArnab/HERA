@@ -29,8 +29,8 @@ class Media(models.Model):
     type = models.CharField(max_length=1, choices=MEDIA_TYPE, default='U')
     is_collection = models.BooleanField(default=False)
 
-    background_image = models.CharField(max_length=100, blank=True, null=True)
-    poster_image = models.CharField(max_length=100, blank=True, null=True)
+    background_image = models.CharField(max_length=200, blank=True, null=True)
+    poster_image = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return '{} [{}]'.format(self.name, self.tmdb_id)
@@ -43,15 +43,15 @@ class Video(models.Model):  # Movies and Episode
     description = models.TextField(null=True, blank=True)
     location = models.CharField(max_length=100)
     type = models.CharField(max_length=1, choices=MEDIA_TYPE, default='U')
-    thumbnail = models.CharField(max_length=100, blank=True, null=True)
+    thumbnail = models.CharField(max_length=200, blank=True, null=True)
     rating = models.FloatField(default=0)
     release_date = models.DateField(null=True, blank=True)
     added_at = models.DateTimeField(null=True, blank=True)
 
     genre = models.ManyToManyField(Genre, blank=True)  # Movie
-    logo = models.CharField(max_length=100, blank=True, null=True) # Movie
-    poster_image = models.CharField(max_length=100, blank=True, null=True)  # Movie
-    background_image = models.CharField(max_length=100, blank=True, null=True)  # Movie
+    logo = models.CharField(max_length=200, blank=True, null=True) # Movie
+    poster_image = models.CharField(max_length=200, blank=True, null=True)  # Movie
+    background_image = models.CharField(max_length=200, blank=True, null=True)  # Movie
     popularity = models.FloatField(null=True, blank=True)  # Movie
 
     season_no = models.IntegerField(null=True, blank=True)  # TV Shows
