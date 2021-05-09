@@ -67,8 +67,8 @@ class MovieDetails(APIView):
     def get(self, request, movie_id, format=None):
         try:
             movie = Video.objects.get(tmdb_id=movie_id)
-        except Media.DoesNotExist:
-            return Response({'error': 'Collection not found'}, status=404)
+        except Video.DoesNotExist:
+            return Response({'error': 'Movie not found'}, status=404)
         serializer = MovieListSerializer(movie, many=False)
         return Response(serializer.data)
 
@@ -129,7 +129,8 @@ class Search(APIView):
         for key in q_list:
             search_filters.append(Q(name__icontains=key))
             search_filters.append(Q(description__icontains=key))
-            search_filters.append(Q(genre__icontains=key))
+            if Genre.objects.filter(name__icontains=key):
+                search_filters.append(Q(genre=Genre.objects.get(name__icontains=key)))
 
         video = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by('-popularity')
         serializer = MovieListSerializer(video, many=True)
