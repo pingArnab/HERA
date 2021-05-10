@@ -8,7 +8,7 @@ from Hera import settings
 from pathlib import Path
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer
+from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer, SingleTVShowSerializer
 from .serializers import MovieListSerializer, GenreListSerializer, GenreDetailsSerializer
 from .models import Media, Video, Genre, TVShow
 from .utils import Tmdb
@@ -96,8 +96,8 @@ class RandomMedia(APIView):
         movies = Video.objects.filter(type='M')
         movies and media_list.append(MovieListSerializer(random.choice(movies), many=False).data)
 
-        tvs = TVShow.objects.filter(type='S')
-        tvs and media_list.append(SingleMovieCollectionSerializer(random.choice(tvs), many=False).data)
+        tvs = TVShow.objects.filter(type='T')
+        tvs and media_list.append(SingleTVShowSerializer(random.choice(tvs), many=False).data)
 
         return Response(random.choice(media_list) if media_list else {})
 
