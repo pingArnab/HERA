@@ -8,7 +8,8 @@ from Hera import settings
 from pathlib import Path
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer, SingleTVShowSerializer
+from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer, SingleTVShowSerializer, \
+    TVShowDetailSetrializer, TVShowEpisodeSerializer
 from .serializers import MovieListSerializer, GenreListSerializer, GenreDetailsSerializer, TVShowListSerializer
 from .models import Media, Video, Genre, TVShow
 from .utils import Tmdb
@@ -177,5 +178,14 @@ class TVDetails(APIView):
             tvs = TVShow.objects.get(tmdb_id=tv_id)
         except Video.DoesNotExist:
             return Response({'error': 'Movie not found'}, status=404)
+
+        seasons_list = list(tvs.video_set.values_list('season_no', flat=True).distinct())
+        seasons = dict()
+        for season in seasons_list:
+            seasons[int(season)] = TVShowEpisodeSerializer(tvs.video_set.filter(season_no=int(season)), many=True).data
+
         serializer = TVShowListSerializer(tvs, many=False)
-        return Response(serializer.data)
+        response = dict()
+        response.update(serializer.data)
+        response.update({'seasons': seasons})
+        return Response(response)
