@@ -102,6 +102,13 @@ class RandomMedia(APIView):
         return Response(random.choice(media_list) if media_list else {})
 
 
+class RandomCollection(APIView):
+    def get(self, request, format=None):
+        collections = Media.objects.filter(type='M')
+        serializer = SingleMovieCollectionSerializer(random.choice(collections), many=False)
+        return Response(serializer.data)
+
+
 class MovieList(APIView):
     def get(self, request, sort_type=None, count=None, format=None):
         movies = Video.objects.filter(type='M')

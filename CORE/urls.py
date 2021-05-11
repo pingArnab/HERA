@@ -15,6 +15,7 @@ urlpatterns = [
     path('genre/', views.GenreList.as_view()),
     path('genre/<str:genre_id>/', views.GenreDetails.as_view()),
     path('random-media/', views.RandomMedia.as_view()),
+    path('random-collection/', views.RandomCollection.as_view()),
 
     path('search/', views.Search.as_view()),
 
