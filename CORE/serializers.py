@@ -59,33 +59,6 @@ class TVShowEpisodeSerializer(serializers.ModelSerializer):
         )
 
 
-class TVShowDetailSetrializer(serializers.ModelSerializer):
-    seasons = serializers.JSONField()
-    genres = serializers.SerializerMethodField()
-
-    class Meta:
-        model = TVShow
-        fields = (
-            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
-            'release_date', 'logo', 'background_image', 'seasons'
-        )
-
-    @staticmethod
-    def get_seasons(obj):
-        seasons_list = list(obj.video_set.values_list('season_no', flat=True).distinct())
-        print(seasons_list)
-        seasons = dict()
-        for season in seasons_list:
-            seasons[int(season)] = TVShowEpisodeSerializer(obj.video_set.filter(season_no=int(season)), many=True).data
-        print(seasons)
-        return seasons
-
-    @staticmethod
-    def get_genres(obj):
-        genre_list = obj.genre.all()
-        return GenreSerializer(genre_list, many=True).data
-
-
 class TVShowListSerializer(serializers.ModelSerializer):
     genres = serializers.SerializerMethodField()
 

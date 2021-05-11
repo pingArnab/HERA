@@ -8,8 +8,8 @@ from Hera import settings
 from pathlib import Path
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer, SingleTVShowSerializer, \
-    TVShowDetailSetrializer, TVShowEpisodeSerializer
+from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer, SingleTVShowSerializer
+from .serializers import TVShowEpisodeSerializer
 from .serializers import MovieListSerializer, GenreListSerializer, GenreDetailsSerializer, TVShowListSerializer
 from .models import Media, Video, Genre, TVShow
 from .utils import Tmdb
