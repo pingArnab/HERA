@@ -9,7 +9,7 @@ from pathlib import Path
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer, SingleTVShowSerializer
-from .serializers import MovieListSerializer, GenreListSerializer, GenreDetailsSerializer
+from .serializers import MovieListSerializer, GenreListSerializer, GenreDetailsSerializer, TVShowListSerializer
 from .models import Media, Video, Genre, TVShow
 from .utils import Tmdb
 import random
@@ -149,3 +149,33 @@ class MongoDb(APIView):
 
     def get(self, request, format=None):
         return Response({'mongoBD': 'mongoDB'})
+
+
+# ---------------------- TV SHows ----------------------
+class TVList(APIView):
+
+    def get(self, request, sort_type=None, count=None, format=None):
+        tvs = TVShow.objects.all()
+        if str(sort_type).lower().strip() == 'popular':
+            sorted_tvs = tvs.order_by('-popularity')
+        elif str(sort_type).lower().strip() == 'latest':
+            sorted_tvs = tvs.order_by('-release_date')
+        elif str(sort_type).lower().strip() == 'top-rated':
+            sorted_tvs = tvs.order_by('-rating')
+        elif str(sort_type).lower().strip() == 'newly-added':
+            sorted_tvs = tvs.order_by('-timestamp')
+        else:
+            sorted_tvs = tvs
+
+        serializer = TVShowListSerializer(sorted_tvs[:count] if count else sorted_tvs, many=True)
+        return Response(serializer.data)
+
+
+class TVDetails(APIView):
+    def get(self, request, tv_id, format=None):
+        try:
+            tvs = TVShow.objects.get(tmdb_id=tv_id)
+        except Video.DoesNotExist:
+            return Response({'error': 'Movie not found'}, status=404)
+        serializer = TVShowListSerializer(tvs, many=False)
+        return Response(serializer.data)

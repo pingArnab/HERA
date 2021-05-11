@@ -49,6 +49,38 @@ class GenreListSerializer(serializers.ModelSerializer):
 
 
 # ------------------------- new -------------------------
+class TVShowListSerializer(serializers.ModelSerializer):
+    genres = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TVShow
+        fields = (
+            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
+            'release_date', 'logo', 'background_image'
+        )
+
+    @staticmethod
+    def get_genres(obj):
+        genre_list = obj.genre.all()
+        return GenreSerializer(genre_list, many=True).data
+
+
+class TVShowListSerializer(serializers.ModelSerializer):
+    genres = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TVShow
+        fields = (
+            'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
+            'release_date', 'logo', 'background_image'
+        )
+
+    @staticmethod
+    def get_genres(obj):
+        genre_list = obj.genre.all()
+        return GenreSerializer(genre_list, many=True).data
+
+
 class MovieListSerializer(serializers.ModelSerializer):
     genres = serializers.SerializerMethodField()
 
