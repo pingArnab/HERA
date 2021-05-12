@@ -92,15 +92,26 @@ class GenreDetails(APIView):
 
 
 class RandomMedia(APIView):
-    def get(self, request, format=None):
-        media_list = []
-        movies = Video.objects.filter(type='M')
-        movies and media_list.append(MovieListSerializer(random.choice(movies), many=False).data)
+    def get(self, request, filter=None, count=1, format=None):
+        movies = []
+        tvs = []
+        if filter in ['movie', None]:
+            movies = Video.objects.filter(type='M')
+            movies = list(MovieListSerializer(movies, many=True).data)
+            random.shuffle(movies)
 
-        tvs = TVShow.objects.filter(type='T')
-        tvs and media_list.append(SingleTVShowSerializer(random.choice(tvs), many=False).data)
+        if filter == ['tv', None]:
+            tvs = TVShow.objects.filter(type='T')
+            tvs = list(SingleTVShowSerializer(tvs, many=True).data)
+            random.shuffle(tvs)
 
-        return Response(random.choice(media_list) if media_list else {})
+        medias = movies + tvs
+        if not medias:
+            return Response({
+                "error": "No results found"
+            })
+
+        return Response(medias[:count])
 
 
 class RandomCollection(APIView):

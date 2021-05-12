@@ -87,6 +87,7 @@ class MovieListSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_genres(obj):
+        print(obj)
         genre_list = obj.genre.all()
         return GenreSerializer(genre_list, many=True).data
 
