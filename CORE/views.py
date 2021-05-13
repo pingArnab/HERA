@@ -187,8 +187,8 @@ class TVDetails(APIView):
     def get(self, request, tv_id, format=None):
         try:
             tvs = TVShow.objects.get(tmdb_id=tv_id)
-        except Video.DoesNotExist:
-            return Response({'error': 'Movie not found'}, status=404)
+        except TVShow.DoesNotExist:
+            return Response({'error': 'TV Show not found'}, status=404)
 
         seasons_list = list(tvs.video_set.values_list('season_no', flat=True).distinct())
         seasons = dict()
