@@ -66,7 +66,7 @@ class TVShowListSerializer(serializers.ModelSerializer):
         model = TVShow
         fields = (
             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
-            'release_date', 'logo', 'background_image'
+            'release_date', 'logo', 'background_image', 'tagline', 'trailer'
         )
 
     @staticmethod
@@ -82,12 +82,12 @@ class MovieListSerializer(serializers.ModelSerializer):
         model = Video
         fields = (
             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
-            'release_date', 'logo', 'background_image'
+            'release_date', 'logo', 'background_image', 'tagline', 'trailer'
         )
 
     @staticmethod
     def get_genres(obj):
-        print(obj)
+        # print(obj)
         genre_list = obj.genre.all()
         return GenreSerializer(genre_list, many=True).data
 
