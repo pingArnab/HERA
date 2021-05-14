@@ -32,6 +32,7 @@ urlpatterns += [
                    # path(API_PATH, include('djoser.urls.authtoken')),
 
                    path(API_PATH, include('CORE.urls')),
+                   path(API_PATH + 'sys/', include('SYS.urls')),
                    path(API_PATH + 'user/', include('USER.urls')),
 
                    url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),

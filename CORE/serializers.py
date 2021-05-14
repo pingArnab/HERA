@@ -66,7 +66,7 @@ class TVShowListSerializer(serializers.ModelSerializer):
         model = TVShow
         fields = (
             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
-            'release_date', 'logo', 'background_image', 'tagline', 'trailer'
+            'release_date', 'logo', 'background_image', 'tagline', 'trailer', 'episode_runtime'
         )
 
     @staticmethod
@@ -82,7 +82,7 @@ class MovieListSerializer(serializers.ModelSerializer):
         model = Video
         fields = (
             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'genres', 'popularity', 'rating',
-            'release_date', 'logo', 'background_image', 'tagline', 'trailer'
+            'release_date', 'logo', 'background_image', 'tagline', 'trailer', 'duration'
         )
 
     @staticmethod

@@ -100,7 +100,7 @@ class RandomMedia(APIView):
             movies = list(MovieListSerializer(movies, many=True).data)
             random.shuffle(movies)
 
-        if filter == ['tv', None]:
+        if filter in ['tv', None]:
             tvs = TVShow.objects.filter(type='T')
             tvs = list(SingleTVShowSerializer(tvs, many=True).data)
             random.shuffle(tvs)

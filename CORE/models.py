@@ -56,6 +56,7 @@ class Video(models.Model):  # Movies and Episode
     popularity = models.FloatField(null=True, blank=True)  # Movie
     tagline = models.CharField(max_length=500, null=True, blank=True)  # Movie
     trailer = models.CharField(max_length=500, blank=True, null=True)  # Movie
+    duration = models.DurationField(null=True, blank=True)
 
     season_no = models.IntegerField(null=True, blank=True)  # TV Shows
 
