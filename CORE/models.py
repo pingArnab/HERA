@@ -38,7 +38,7 @@ class Media(models.Model):
 
 
 class Video(models.Model):  # Movies and Episode
-    tmdb_id = models.IntegerField()
+    tmdb_id = models.IntegerField(unique=True, null=True, blank=True)
     media = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -47,7 +47,7 @@ class Video(models.Model):  # Movies and Episode
     thumbnail = models.CharField(max_length=500, blank=True, null=True)
     rating = models.FloatField(default=0)
     release_date = models.DateField(null=True, blank=True)
-    added_at = models.DateTimeField(null=True, blank=True)
+    added_at = models.DateTimeField(auto_now_add=True)
 
     genre = models.ManyToManyField(Genre, blank=True)  # Movie
     logo = models.CharField(max_length=500, blank=True, null=True) # Movie
