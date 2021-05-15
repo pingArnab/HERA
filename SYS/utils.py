@@ -39,6 +39,7 @@ def add_movie_to_db(tmdb_data, filename):
     video = None
     media = None
     tmdbapi = TMDBAPI()
+    fanartapi = FanartAPI()
     try:
         video = Video.objects.create(
             tmdb_id=tmdb_data.get('id'),
@@ -46,7 +47,6 @@ def add_movie_to_db(tmdb_data, filename):
             description=tmdb_data.get('overview'),
             location='/static/' + filename,
             type='M',
-            thumbnail=TMDBAPI.TMDB_IMAGE_URL + tmdb_data.get('backdrop_path'),
             rating=tmdb_data.get('vote_average'),
             added_at=datetime.datetime.now(),
             poster_image=TMDBAPI.TMDB_IMAGE_URL + tmdb_data.get('poster_path'),
@@ -54,7 +54,23 @@ def add_movie_to_db(tmdb_data, filename):
             popularity=tmdb_data.get('popularity'),
             tagline=tmdb_data.get('tagline'),
         )
-        video.duration = datetime.timedelta(minutes=int(tmdb_data.get('runtime')) * 60) if type(tmdb_data.get('runtime')) is int else None
+        video.duration = datetime.timedelta(minutes=int(tmdb_data.get('runtime'))) if type(
+            tmdb_data.get('runtime')) is int else None
+
+        logo_and_thumbnail = fanartapi.get_logo_and_thumbnail(tmdb_data.get('id'))
+        if logo_and_thumbnail:
+            video.logo = logo_and_thumbnail.get('logo')
+            video.thumbnail = logo_and_thumbnail.get('thumbnail')
+
+        trailer = tmdbapi.get_trailer(tmdb_data.get('id'))
+        if trailer:
+            video.trailer = trailer
+
+        try:
+            video.release_date = datetime.datetime.strptime(tmdb_data.get('release_date'), '%Y-%m-%d').date()
+        except Exception as ex:
+            print(ex)
+
         if tmdb_data['genres']:
             genres = []
             for linked_genre in tmdb_data['genres']:
@@ -73,7 +89,6 @@ def add_movie_to_db(tmdb_data, filename):
                     except Exception as e:
                         print(e)
             video.genre.add(*genres)
-
         video.genre.add()
         print('----------------------', video)
         if tmdb_data['belongs_to_collection']:
@@ -141,3 +156,37 @@ class TMDBAPI:
         for genre in response.json().get('genres'):
             genres[genre['id']] = genre['name']
         return genres
+
+    def get_trailer(self, tmdb_id):
+        trailer_url = self.TMDB_URL + '/movie/{tmdb_id}/videos'.format(tmdb_id=tmdb_id) + self.TMDB_EXTRAS
+        print(trailer_url)
+        response = requests.get(trailer_url)
+        data = response.json()['results']
+        trailer = None
+        for video in data:
+            if video.get('type') == "Trailer":
+                return 'https://www.youtube.com/watch?v=' + video.get('id')
+        return None
+
+
+# https://webservice.fanart.tv/v3/movies/673?api_key=0a07e4f6e89f662683254b31e370bedb
+class FanartAPI:
+    FANART_API_KEY = '0a07e4f6e89f662683254b31e370bedb'
+    FANART_URL = 'https://webservice.fanart.tv/v3'
+    FANART_EXTRAS = '?api_key={api_key}'.format(api_key=FANART_API_KEY)
+
+    def get_logo_and_thumbnail(self, tmdb_id):
+        res = dict()
+        logo_and_thumbnail_url = self.FANART_URL + '/movies/{tmdb_id}'.format(tmdb_id=tmdb_id) + self.FANART_EXTRAS
+        response = requests.get(logo_and_thumbnail_url)
+        data = response.json()
+        print("line: 183", data)
+        if data.get('movielogo'):
+            res['logo'] = data['movielogo'][0]['url']
+        elif data.get('hdmovielogo'):
+            res['logo'] = data['hdmovielogo'][0]['url']
+        else:
+            res['logo'] = None
+
+        res['thumbnail'] = data['moviethumb'][0]['url'] if data.get('moviethumb') else None
+        return res
