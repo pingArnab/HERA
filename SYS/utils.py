@@ -99,7 +99,7 @@ def add_movie_to_db(tmdb_data, filename):
 
                 media = Media.objects.create(
                     tmdb_id=collection.get('id'),
-                    name=collection.get('name'),
+                    name=collection.get('name').replace('Collection', '').strip(),
                     description=collection.get('overview'),
                     type='M',
                     is_collection=True,
@@ -165,7 +165,7 @@ class TMDBAPI:
         trailer = None
         for video in data:
             if video.get('type') == "Trailer":
-                return 'https://www.youtube.com/watch?v=' + video.get('id')
+                return 'https://www.youtube.com/watch?v=' + video.get('key')
         return None
 
 
@@ -182,11 +182,30 @@ class FanartAPI:
         data = response.json()
         print("line: 183", data)
         if data.get('movielogo'):
-            res['logo'] = data['movielogo'][0]['url']
+            for logo in data['movielogo']:
+                if logo['lang'] == 'en':
+                    res['logo'] = logo['url']
+                    break
+            if not res['logo']:
+                res['logo'] = data['movielogo'][0]['url']
         elif data.get('hdmovielogo'):
-            res['logo'] = data['hdmovielogo'][0]['url']
+            for logo in data['hdmovielogo']:
+                if logo['lang'] == 'en':
+                    res['logo'] = logo['url']
+                    break
+            if not res['logo']:
+                res['logo'] = data['hdmovielogo'][0]['url']
         else:
             res['logo'] = None
 
-        res['thumbnail'] = data['moviethumb'][0]['url'] if data.get('moviethumb') else None
+        if data.get('moviethumb'):
+            for logo in data['moviethumb']:
+                if logo['lang'] == 'en':
+                    res['thumbnail'] = logo['url']
+                    break
+            if not res['logo']:
+                res['thumbnail'] = data['moviethumb'][0]['url']
+        else:
+            res['thumbnail'] = None
+
         return res
