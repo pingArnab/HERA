@@ -9,15 +9,25 @@ from . import utils
 class Sync(APIView):
     def get(self, request, format=None):
         tmdbapi = utils.TMDBAPI()
-        movies = utils.get_all_static_file_stat()
+        movies = utils.get_all_movie_file_stat()
         for movie_name, details in movies.items():
-            search_key = re.compile('[\w ]*').match(movie_name).group()
-            response = tmdbapi.search(search_key).json()
+            movie_search_key = re.compile('[\w ]*').match(movie_name).group()
+            response = tmdbapi.search_movie(movie_search_key).json()
             if response["results"]:
-                print(response['results'][0])
                 movies[movie_name].append(response["results"][0]["id"])
                 movies[movie_name].append(response["results"][0]["original_title"])
                 sync_status = utils.add_movie_to_db(tmdbapi.get_movie_by_id(response["results"][0]["id"]), movie_name)
                 movies[movie_name].append({'sync_status': sync_status})
 
-        return Response(movies)
+        tvs = utils.get_all_tv_show_file_stat()
+        for tv_show_name, details in tvs.items():
+            tv_search_key = re.compile('[\w ]*').match(tv_show_name).group()
+            response = tmdbapi.search_tv(tv_search_key).json()
+            print(tv_search_key, response)
+            if response["results"]:
+                tvs[tv_show_name].append(response["results"][0]["id"])
+                tvs[tv_show_name].append(response["results"][0]["name"])
+                sync_status = utils.add_tv_show_to_db(tmdbapi.get_tv_show_by_id(response["results"][0]["id"]))
+                tvs[tv_show_name].append({'sync_status': sync_status})
+
+        return Response({'movies': movies, 'tvs': tvs})

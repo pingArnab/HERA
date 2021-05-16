@@ -17,7 +17,6 @@ from django.contrib import staticfiles
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -28,7 +27,6 @@ SECRET_KEY = 'django-insecure-ra8y+vg@rzg-^ip2&v#u!t=fdn(301%9tev6$h$!1lf!2(f+)r
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -93,7 +91,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Hera.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -103,7 +100,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -123,7 +119,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -138,7 +133,10 @@ USE_L10N = True
 USE_TZ = True
 
 staticfiles_dir_file = open(BASE_DIR / 'staticfiles_dirs.csv', 'r')
-staticfiles_dir = [BASE_DIR / "static"] + list(map(lambda x: Path(x), staticfiles_dir_file.read().split(',')))
+media_dirs = staticfiles_dir_file.readlines()
+MOVIES_DIRS = list(map(lambda x: Path(x), media_dirs[0].replace('\n', '').replace('\r', '').split(',')))
+TVSHOWS_DIRS = list(map(lambda x: Path(x), media_dirs[1].replace('\n', '').replace('\r', '').split(',')))
+staticfiles_dir = [BASE_DIR / "static"] + MOVIES_DIRS + TVSHOWS_DIRS
 staticfiles_dir_file.close()
 
 # Static files (CSS, JavaScript, Images)
@@ -153,4 +151,3 @@ MEDIA_ROOT = 'media/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-

@@ -71,7 +71,7 @@ class TVShow(Media):
     popularity = models.FloatField(default=0)
     rating = models.FloatField(default=0)
     release_date = models.DateField(null=True, blank=True)
-    episode_runtime = models.DurationField(default=0)
+    episode_runtime = models.DurationField(null=True, blank=True)
     season_count = models.IntegerField(default=1)
 
     tagline = models.CharField(max_length=500, null=True, blank=True)
