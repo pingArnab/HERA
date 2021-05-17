@@ -112,10 +112,10 @@ class FanartAPI:
     def get_logo_and_thumbnail(self, tmdb_id, media_type=None):
         res = dict()
         media_id = None
-        if media_type.lower() == 'movie':
+        if 'movie' in media_type.lower():
             media_id = tmdb_id
-            media_type = media_type.lower()
-        elif media_type.lower() == 'tv':
+            media_type = 'movies'
+        elif 'tv' in media_type.lower():
             tmdbapi = TMDBAPI()
             external_ids = tmdbapi.get_external_ids(tmdb_id=tmdb_id, media_type=media_type)
             media_id = external_ids.get('tvdb_id')
