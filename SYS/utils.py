@@ -126,7 +126,7 @@ class FanartAPI:
             id=media_id
         ) + self.FANART_EXTRAS
         response = requests.get(logo_and_thumbnail_url)
-        print(tmdb_id, ' | ', logo_and_thumbnail_url)
+        # print(tmdb_id, ' | ', logo_and_thumbnail_url)
         data = response.json()
         # print("line: 183", data)
         if data.get('{media_type}logo'.format(media_type=media_type)):
@@ -289,11 +289,6 @@ def add_tv_show_to_db(tmdb_data, location=None):
                             synced_file = None
                             for available_file, stat in available_files.items():
                                 if matcher(episode.get('episode_number'), available_file, 'episode'):
-                                    print(season.get('season_number'),
-                                          ' | ',
-                                          episode.get('episode_number'),
-                                          ' => ',
-                                          available_file)
                                     episode_video = None
                                     try:
                                         episode_video = tv_shows.video_set.get_or_create(tmdb_id=episode['id'])[0]
@@ -302,11 +297,12 @@ def add_tv_show_to_db(tmdb_data, location=None):
                                         episode_video.rating = episode['vote_average']
                                         episode_video.season_no = episode['season_number']
                                         episode_video.type = 'T'
-                                        episode_video.location = os.path.join(
-                                            location,
-                                            available_seasons_dir,
-                                            available_file
+                                        episode_video.location = '/static/{show}/{season}/{episode}'.format(
+                                            show=location.split('\\')[-1],
+                                            season=available_seasons_dir,
+                                            episode=available_file
                                         )
+
                                         if episode['still_path']:
                                             episode_video.thumbnail = TMDBAPI.TMDB_IMAGE_URL + episode['still_path']
                                         episode_video.save()

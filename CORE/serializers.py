@@ -55,7 +55,7 @@ class TVShowEpisodeSerializer(serializers.ModelSerializer):
         model = Video
         fields = (
             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'popularity', 'rating',
-            'release_date', 'logo', 'background_image'
+            'release_date', 'logo', 'background_image', 'location'
         )
 
 
