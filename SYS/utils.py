@@ -159,7 +159,7 @@ class FanartAPI:
         return res
 
 
-def get_dir_files_stat(directory=None):
+def get_dir_files_stat(directory=None, media_dir_hash=None):
     file_date = dict()
     try:
         os.chdir(directory)
@@ -167,7 +167,11 @@ def get_dir_files_stat(directory=None):
             if file and (os.path.splitext(file)[1] in ['.mp4', '.mpeg4', '.webm', '.mkv', '.wmv', '.avi']):
                 create_time = datetime.datetime.fromtimestamp(pathlib.Path(file).stat().st_mtime)
                 is_sync = create_time < last_sync
-                file_date[file] = [create_time, is_sync]
+                file_date[file] = {
+                    'media_dir_hash': media_dir_hash,
+                    'create_time': create_time,
+                    'is_sync': is_sync
+                }
     except Exception as e:
         print(e)
         traceback.print_exc()
@@ -176,8 +180,8 @@ def get_dir_files_stat(directory=None):
 
 def get_all_movie_file_stat():
     stat = dict()
-    for directory in settings.MOVIES_DIRS:
-        stat.update(get_dir_files_stat(directory))
+    for media_dir_hash, directory in settings.MOVIES_DIRS_MAP.items():
+        stat.update(get_dir_files_stat(directory, media_dir_hash))
     return stat
 
 
@@ -318,8 +322,10 @@ def add_tv_show_to_db(tmdb_data, location=None):
 
                             if synced_file:
                                 del available_files[synced_file]
-
-        tv_shows.save()
+        if tv_shows.video_set.count():
+            tv_shows.save()
+        else:
+            tv_shows.delete()
         return True
     except Exception as e:
         print('Ex--------------', e, 'on TvShow: ', tv_shows.tmdb_id, '\n', json.dumps(tmdb_data))
@@ -329,10 +335,11 @@ def add_tv_show_to_db(tmdb_data, location=None):
         return False
 
 
-def add_movie_to_db(tmdb_data, filename):
+def add_movie_to_db(tmdb_data, filename, media_dir_hash):
     if Video.objects.filter(tmdb_id=tmdb_data['id']):
         video = Video.objects.get(tmdb_id=tmdb_data['id'])
-        video.location = '/static/' + filename
+        video.location = '/media{id}/'.format(id=media_dir_hash) + filename
+        video.save()
         return True
     video = None
     media = None
@@ -343,7 +350,7 @@ def add_movie_to_db(tmdb_data, filename):
             tmdb_id=tmdb_data.get('id'),
             name=tmdb_data.get('original_title'),
             description=tmdb_data.get('overview'),
-            location='/static/' + filename,
+            location='/media{id}/'.format(id=media_dir_hash) + filename,
             type='M',
             rating=tmdb_data.get('vote_average'),
             added_at=datetime.datetime.now(),

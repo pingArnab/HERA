@@ -14,6 +14,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import staticfiles
+from Hera import utils
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -132,12 +133,15 @@ USE_L10N = True
 
 USE_TZ = True
 
-staticfiles_dir_file = open(BASE_DIR / 'staticfiles_dirs.csv', 'r')
-media_dirs = staticfiles_dir_file.readlines()
-MOVIES_DIRS = list(map(lambda x: Path(x), media_dirs[0].replace('\n', '').replace('\r', '').split(',')))
-TVSHOWS_DIRS = list(map(lambda x: Path(x), media_dirs[1].replace('\n', '').replace('\r', '').split(',')))
+file = open(BASE_DIR / 'staticfiles_dirs.csv', 'r')
+media_dirs = utils.get_media_dirs(file.readlines())
+file.close()
+
+MOVIES_DIRS_MAP = media_dirs.get('movie_dir_map')
+TVSHOWS_DIRS_MAP = media_dirs.get('tv_dir_map')
+MOVIES_DIRS = media_dirs.get('movie_dirs')
+TVSHOWS_DIRS = media_dirs.get('tv_dirs')
 staticfiles_dir = [BASE_DIR / "static"] + MOVIES_DIRS + TVSHOWS_DIRS
-staticfiles_dir_file.close()
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
