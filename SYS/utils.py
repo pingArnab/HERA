@@ -185,7 +185,7 @@ def get_all_movie_file_stat():
     return stat
 
 
-def get_dir_tv_shows_stat(directory=None):
+def get_dir_tv_shows_stat(directory=None, media_dir_hash=None):
     file_date = dict()
     try:
         directory and os.chdir(directory)
@@ -195,6 +195,7 @@ def get_dir_tv_shows_stat(directory=None):
             file_date[file] = {
                 'create_time': create_time,
                 'location': str(pathlib.Path(file).absolute()),
+                'media_dir_hash': media_dir_hash,
                 'is_sync_with_db': is_sync,
             }
     except Exception as e:
@@ -205,8 +206,8 @@ def get_dir_tv_shows_stat(directory=None):
 
 def get_all_tv_show_file_stat():
     stat = dict()
-    for directory in settings.TVSHOWS_DIRS:
-        stat.update(get_dir_tv_shows_stat(directory))
+    for media_dir_hash, directory in settings.TVSHOWS_DIRS_MAP.items():
+        stat.update(get_dir_tv_shows_stat(directory, media_dir_hash))
     return stat
 
 
@@ -237,7 +238,7 @@ def get_genre_array(genre_ids=None):
         return genres
 
 
-def add_tv_show_to_db(tmdb_data, location=None):
+def add_tv_show_to_db(tmdb_data, location=None, media_dir_hash=None):
     # if TVShow.objects.filter(tmdb_id=tmdb_data['id']):
     #     return True
     tv_shows = None
@@ -304,8 +305,8 @@ def add_tv_show_to_db(tmdb_data, location=None):
                                         episode_video.rating = episode['vote_average']
                                         episode_video.season_no = episode['season_number']
                                         episode_video.type = 'T'
-                                        episode_video.location = '/static/{show}/{season}/{episode}'.format(
-                                            show=location.split('\\')[-1],
+                                        episode_video.location = '/media{show}/{season}/{episode}'.format(
+                                            show=media_dir_hash,
                                             season=available_seasons_dir,
                                             episode=available_file
                                         )

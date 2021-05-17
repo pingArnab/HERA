@@ -39,5 +39,4 @@ urlpatterns += [
 
 for static_dir_hash, static_dir in {**settings.MOVIES_DIRS_MAP, **settings.TVSHOWS_DIRS_MAP}.items():
     urlpatterns + static(settings.MEDIA_URL, document_root=static_dir)
-    print(static_dir)
     urlpatterns.append(url(r'^media{id}/(?P<path>.*)$'.format(id=static_dir_hash), serve, {'document_root': static_dir}))

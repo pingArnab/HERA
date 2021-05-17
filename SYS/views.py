@@ -31,7 +31,8 @@ class Sync(APIView):
             if response.get("results"):
                 sync_status = utils.add_tv_show_to_db(tmdbapi.get_tv_show_by_id(
                     response["results"][0]["id"]),
-                    details.get('location')
+                    details.get('location'),
+                    details.get('media_dir_hash')
                 )
                 tvs[tv_show_name].update({
                     'tmdb_id': response["results"][0]["id"],
