@@ -12,7 +12,7 @@ class MovieCollectionListSerializer(serializers.ModelSerializer):
 
 class MovieCollectionPartsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Media
+        model = Video
         fields = (
             'name', 'tmdb_id', 'poster_image', 'location'
         )
