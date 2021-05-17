@@ -1,6 +1,7 @@
 from pathlib import Path
 import hashlib
 
+
 def get_media_dirs(media_dir_stream):
     result = dict()
     movie_dir_map = dict()
@@ -13,7 +14,4 @@ def get_media_dirs(media_dir_stream):
 
     result['movie_dir_map'] = movie_dir_map
     result['tv_dir_map'] = tv_dir_map
-    result['movie_dirs'] = list(movie_dir_map.values())
-    result['tv_dirs'] = list(tv_dir_map.values())
-
     return result

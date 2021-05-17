@@ -136,13 +136,11 @@ USE_TZ = True
 file = open(BASE_DIR / 'staticfiles_dirs.csv', 'r')
 media_dirs = utils.get_media_dirs(file.readlines())
 file.close()
-
 MOVIES_DIRS_MAP = media_dirs.get('movie_dir_map')
 TVSHOWS_DIRS_MAP = media_dirs.get('tv_dir_map')
-MOVIES_DIRS = media_dirs.get('movie_dirs')
-TVSHOWS_DIRS = media_dirs.get('tv_dirs')
-staticfiles_dir = [BASE_DIR / "static"] + MOVIES_DIRS + TVSHOWS_DIRS
 
+
+staticfiles_dir = [BASE_DIR / "static"]
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 STATIC_ROOT = 'staticfiles/'
