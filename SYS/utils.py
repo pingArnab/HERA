@@ -208,6 +208,7 @@ def get_all_tv_show_file_stat():
 
 def get_genre_array(genre_ids=None):
     tmdbapi = TMDBAPI()
+    all_genres = None
     if genre_ids:
         genres = []
         for linked_genre in genre_ids:
@@ -216,13 +217,15 @@ def get_genre_array(genre_ids=None):
                 genres.append(Genre.objects.get(tmdb_id=genre_id))
             else:
                 try:
-                    all_genres = tmdbapi.get_all_genre()
+                    if not all_genres:
+                        all_genres = tmdbapi.get_all_genre()
                     if all_genres.get(genre_id):
                         genre = Genre.objects.create(
                             tmdb_id=genre_id,
                             name=all_genres[genre_id]
                         )
                         genre.save()
+                        # print('adding Genre: {', genre, ' }', 'on line: 228')
                         genres.append(genre)
                 except Exception as e:
                     print(e)
