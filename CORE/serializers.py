@@ -14,7 +14,7 @@ class MovieCollectionPartsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Media
         fields = (
-            'name', 'tmdb_id', 'poster_image',
+            'name', 'tmdb_id', 'poster_image', 'location'
         )
 
 
@@ -28,7 +28,7 @@ class SingleMovieCollectionSerializer(serializers.ModelSerializer):
         )
 
     def get_parts(self, obj):
-        parts = obj.video_set # Video.objects.filter(list=obj)
+        parts = obj.video_set  # Video.objects.filter(list=obj)
         return MovieCollectionPartsSerializer(parts, many=True).data
 
 
