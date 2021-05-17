@@ -18,10 +18,10 @@ def matcher(season_no: int, name, matching_type):
     return bool(
         (matching_type.lower() == 'movie' and bool(match('(\\D|^){}(\\D|$)'.format(str(season_no).zfill(2))))) or
         (matching_type.lower() == 'movie' and bool(match('(\\D|^){}(\\D|$)'.format(str(season_no))))) or
-        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type[0], season_no=str(season_no)))) or
-        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type[0], season_no=str(season_no).zfill(2)))) or
-        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type, season_no=str(season_no)))) or
-        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type, season_no=str(season_no).zfill(2))))
+        bool(match('{type}\\s*{season_no}(\\D|$)'.format(type=matching_type[0], season_no=str(season_no)))) or
+        bool(match('{type}\\s*{season_no}(\\D|$)'.format(type=matching_type[0], season_no=str(season_no).zfill(2)))) or
+        bool(match('{type}\\s*{season_no}(\\D|$)'.format(type=matching_type, season_no=str(season_no)))) or
+        bool(match('{type}\\s*{season_no}(\\D|$)'.format(type=matching_type, season_no=str(season_no).zfill(2))))
     )
 
 
@@ -110,21 +110,23 @@ class FanartAPI:
     FANART_EXTRAS = '?api_key={api_key}'.format(api_key=FANART_API_KEY)
 
     def get_logo_and_thumbnail(self, tmdb_id, media_type=None):
+        media_url_type = None
         res = dict()
         media_id = None
         if 'movie' in media_type.lower():
             media_id = tmdb_id
-            media_type = 'movies'
+            media_url_type = 'movies'
         elif 'tv' in media_type.lower():
             tmdbapi = TMDBAPI()
             external_ids = tmdbapi.get_external_ids(tmdb_id=tmdb_id, media_type=media_type)
             media_id = external_ids.get('tvdb_id')
-            media_type = media_type.lower()
+            media_url_type = media_type.lower()
         logo_and_thumbnail_url = self.FANART_URL + '/{media_type}/{id}'.format(
-            media_type=media_type,
+            media_type=media_url_type,
             id=media_id
         ) + self.FANART_EXTRAS
         response = requests.get(logo_and_thumbnail_url)
+        print(tmdb_id, ' | ', logo_and_thumbnail_url)
         data = response.json()
         # print("line: 183", data)
         if data.get('{media_type}logo'.format(media_type=media_type)):
@@ -229,22 +231,22 @@ def get_genre_array(genre_ids=None):
 
 
 def add_tv_show_to_db(tmdb_data, location=None):
-    if TVShow.objects.filter(tmdb_id=tmdb_data['id']):
-        return True
+    # if TVShow.objects.filter(tmdb_id=tmdb_data['id']):
+    #     return True
     tv_shows = None
     tmdbapi = TMDBAPI()
     fanartapi = FanartAPI()
     try:
-        tv_shows = TVShow.objects.create(
+        tv_shows = TVShow.objects.get_or_create(
             tmdb_id=tmdb_data.get('id'),
-            name=tmdb_data.get('name'),
-            description=tmdb_data.get('overview'),
-            type='T',
+        )[0]
+        tv_shows.name = tmdb_data.get('name')
+        tv_shows.description = tmdb_data.get('overview')
+        tv_shows.type = 'T'
 
-            rating=tmdb_data.get('vote_average'),
-            popularity=tmdb_data.get('popularity'),
-            tagline=tmdb_data.get('tagline'),
-        )
+        tv_shows.rating = tmdb_data.get('vote_average')
+        tv_shows.popularity = tmdb_data.get('popularity')
+        tv_shows.tagline = tmdb_data.get('tagline')
 
         if tmdb_data.get('poster_path'):
             tv_shows.poster_image = TMDBAPI.TMDB_IMAGE_URL + tmdb_data.get('poster_path')
@@ -321,9 +323,9 @@ def add_tv_show_to_db(tmdb_data, location=None):
         tv_shows.save()
         return True
     except Exception as e:
+        print('Ex--------------', e, 'on TvShow: ', tv_shows.tmdb_id, '\n', json.dumps(tmdb_data))
         if tv_shows:
             tv_shows.delete()
-        print('Ex--------------', e)
         traceback.print_exc()
         return False
 
@@ -387,9 +389,14 @@ def add_movie_to_db(tmdb_data, filename):
                     description=collection.get('overview'),
                     type='M',
                     is_collection=True,
-                    background_image=TMDBAPI.TMDB_IMAGE_URL + collection.get('backdrop_path'),
-                    poster_image=TMDBAPI.TMDB_IMAGE_URL + collection.get('poster_path')
+
                 )
+                if collection.get('backdrop_path'):
+                    media.background_image = TMDBAPI.TMDB_IMAGE_URL + collection.get('backdrop_path')
+
+                if collection.get('poster_path'):
+                    media.poster_image = TMDBAPI.TMDB_IMAGE_URL + collection.get('poster_path')
+
             media.save()
             # print('----------------------', media)
             video.media = media
