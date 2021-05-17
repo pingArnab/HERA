@@ -1,14 +1,160 @@
 import datetime
+import json
 import os
 import pathlib
+import re
 import traceback
 
 import requests
 from django.conf import settings
-
 from CORE.models import Media, Video, Genre, TVShow
 
 last_sync = datetime.datetime(2021, 5, 12)
+
+
+def matcher(season_no: int, name, matching_type):
+    match = lambda x: re.search(x, str(name), re.IGNORECASE)
+    matching_type = matching_type.lower()
+    return bool(
+        (matching_type.lower() == 'movie' and bool(match('(\\D|^){}(\\D|$)'.format(str(season_no).zfill(2))))) or
+        (matching_type.lower() == 'movie' and bool(match('(\\D|^){}(\\D|$)'.format(str(season_no))))) or
+        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type[0], season_no=str(season_no)))) or
+        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type[0], season_no=str(season_no).zfill(2)))) or
+        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type, season_no=str(season_no)))) or
+        bool(match('{type}{season_no}(\\D|$)'.format(type=matching_type, season_no=str(season_no).zfill(2))))
+    )
+
+
+class TMDBAPI:
+    TMDB_API_KEY = 'adfff9c3b0688cc13ae8d7b0291b257e'
+    TMDB_URL = 'https://api.themoviedb.org/3'
+    TMDB_IMAGE_URL = 'https://image.tmdb.org/t/p/original'
+    TMDB_EXTRAS = '?api_key={api_key}&language=en-US'.format(api_key=TMDB_API_KEY)
+
+    def search_movie(self, search_key=None):
+        # print('---------', search_key)
+        search_url = self.TMDB_URL + '/search/movie' + self.TMDB_EXTRAS \
+                     + "&query={search_key}&page=1&include_adult=false".format(search_key=search_key)
+        response = requests.get(search_url)
+        return response
+
+    def search_tv(self, search_key=None):
+        # print('---------', search_key)
+        search_url = self.TMDB_URL + '/search/tv' + self.TMDB_EXTRAS \
+                     + "&query={search_key}&page=1&include_adult=false".format(search_key=search_key)
+        response = requests.get(search_url)
+        return response
+
+    def get_movie_by_id(self, movie_id):
+        movie_url = self.TMDB_URL + '/movie/{movie_id}'.format(movie_id=movie_id) + self.TMDB_EXTRAS
+        response = requests.get(movie_url)
+        return response.json()
+
+    def get_tv_show_by_id(self, tv_id):
+        tv_url = self.TMDB_URL + '/tv/{tv_id}'.format(tv_id=tv_id) + self.TMDB_EXTRAS
+        response = requests.get(tv_url)
+        return response.json()
+
+    def get_episode_by_tv_show_id(self, tv_id, season_id):
+        tv_url = self.TMDB_URL + '/tv/{tv_id}/season/{season_id}'.format(
+            tv_id=tv_id,
+            season_id=season_id
+        ) + self.TMDB_EXTRAS
+        response = requests.get(tv_url)
+        return response.json().get('episodes')
+
+    def get_collection_by_id(self, collection_id):
+        collection_url = self.TMDB_URL + '/collection/{collection_id}'.format(
+            collection_id=collection_id) + self.TMDB_EXTRAS
+        # print(collection_id, type(collection_id), ' | ', collection_url)
+        response = requests.get(collection_url)
+        return response.json()
+
+    def get_all_genre(self):
+        genre_url = self.TMDB_URL + '/genre/movie/list' + self.TMDB_EXTRAS
+        # print(genre_url)
+        response = requests.get(genre_url)
+        genres = dict()
+        for genre in response.json().get('genres'):
+            genres[genre['id']] = genre['name']
+        return genres
+
+    def get_trailer(self, tmdb_id, media_type=None):
+
+        trailer_url = self.TMDB_URL + '/{media_type}/{tmdb_id}/videos'.format(
+            media_type=media_type.lower(),
+            tmdb_id=tmdb_id
+        ) + self.TMDB_EXTRAS
+        # print(trailer_url)
+        response = requests.get(trailer_url)
+        data = response.json()['results']
+        trailer = None
+        for video in data:
+            if video.get('type') == "Trailer":
+                return 'https://www.youtube.com/watch?v=' + video.get('key')
+        return None
+
+    # https://api.themoviedb.org/3/tv/71912/external_ids?api_key=adfff9c3b0688cc13ae8d7b0291b257e&language=en-US
+    def get_external_ids(self, tmdb_id, media_type=None):
+        external_ids_url = self.TMDB_URL + '/{media_type}/{tmdb_id}/external_ids'.format(
+            media_type=media_type.lower(),
+            tmdb_id=tmdb_id
+        ) + self.TMDB_EXTRAS
+        return requests.get(external_ids_url).json()
+
+
+# https://webservice.fanart.tv/v3/movies/673?api_key=0a07e4f6e89f662683254b31e370bedb
+class FanartAPI:
+    FANART_API_KEY = '0a07e4f6e89f662683254b31e370bedb'
+    FANART_URL = 'https://webservice.fanart.tv/v3'
+    FANART_EXTRAS = '?api_key={api_key}'.format(api_key=FANART_API_KEY)
+
+    def get_logo_and_thumbnail(self, tmdb_id, media_type=None):
+        res = dict()
+        media_id = None
+        if media_type.lower() == 'movie':
+            media_id = tmdb_id
+            media_type = media_type.lower()
+        elif media_type.lower() == 'tv':
+            tmdbapi = TMDBAPI()
+            external_ids = tmdbapi.get_external_ids(tmdb_id=tmdb_id, media_type=media_type)
+            media_id = external_ids.get('tvdb_id')
+            media_type = media_type.lower()
+        logo_and_thumbnail_url = self.FANART_URL + '/{media_type}/{id}'.format(
+            media_type=media_type,
+            id=media_id
+        ) + self.FANART_EXTRAS
+        response = requests.get(logo_and_thumbnail_url)
+        data = response.json()
+        # print("line: 183", data)
+        if data.get('{media_type}logo'.format(media_type=media_type)):
+            for logo in data['{media_type}logo'.format(media_type=media_type)]:
+                if logo['lang'] == 'en':
+                    res['logo'] = logo['url']
+                    break
+            if not res['logo']:
+                res['logo'] = data['{media_type}logo'.format(media_type=media_type)][0]['url']
+        elif data.get('hd{media_type}logo'.format(media_type=media_type)):
+            for logo in data['hd{media_type}logo'.format(media_type=media_type)]:
+                if logo['lang'] == 'en':
+                    res['logo'] = logo['url']
+                    break
+            if not res['logo']:
+                res['logo'] = data['hd{media_type}logo'.format(media_type=media_type)][0]['url']
+        else:
+            res['logo'] = None
+
+        if data.get('{media_type}thumb'.format(media_type=media_type)):
+            for logo in data['{media_type}thumb'.format(media_type=media_type)]:
+                if logo['lang'] == 'en':
+                    res['thumbnail'] = logo['url']
+                    break
+            if not res['logo']:
+                res['thumbnail'] = data['{media_type}thumb'.format(media_type=media_type)][0]['url']
+        else:
+            res['thumbnail'] = None
+
+        return res
 
 
 def get_dir_files_stat(directory=None):
@@ -40,18 +186,20 @@ def get_dir_tv_shows_stat(directory=None):
         for file in [name for name in os.listdir() if os.path.isdir(os.path.join(name))]:
             create_time = datetime.datetime.fromtimestamp(pathlib.Path(file).stat().st_mtime)
             is_sync = create_time < last_sync
-            file_date[file] = [create_time, is_sync]
+            file_date[file] = {
+                'create_time': create_time,
+                'location': str(pathlib.Path(file).absolute()),
+                'is_sync_with_db': is_sync,
+            }
     except Exception as e:
         print(e)
         traceback.print_exc()
-    print(file_date)
     return file_date
 
 
 def get_all_tv_show_file_stat():
     stat = dict()
     for directory in settings.TVSHOWS_DIRS:
-        print(directory)
         stat.update(get_dir_tv_shows_stat(directory))
     return stat
 
@@ -80,13 +228,12 @@ def get_genre_array(genre_ids=None):
         return genres
 
 
-def add_tv_show_to_db(tmdb_data):
+def add_tv_show_to_db(tmdb_data, location=None):
     if TVShow.objects.filter(tmdb_id=tmdb_data['id']):
         return True
-
+    tv_shows = None
     tmdbapi = TMDBAPI()
     fanartapi = FanartAPI()
-    tv_shows = None
     try:
         tv_shows = TVShow.objects.create(
             tmdb_id=tmdb_data.get('id'),
@@ -123,6 +270,53 @@ def add_tv_show_to_db(tmdb_data):
             tv_shows.episode_runtime = datetime.timedelta(
                 minutes=int(tmdb_data.get('episode_run_time')[0])
             ) if type(tmdb_data.get('episode_run_time')[0]) is int else None
+
+        if tmdb_data['seasons'] and location:
+            # location and os.chdir(location)
+            available_seasons_dirs = [name for name in os.listdir(location)
+                                      if os.path.isdir(os.path.join(location, name))]
+            for season in tmdb_data['seasons']:
+                if not season.get('season_number'):
+                    continue
+
+                for available_seasons_dir in available_seasons_dirs:
+                    if matcher(season.get('season_number'), available_seasons_dir, 'season'):
+                        available_files = get_dir_files_stat(os.path.join(location, available_seasons_dir))
+                        episodes = tmdbapi.get_episode_by_tv_show_id(tmdb_data['id'], season.get('season_number'))
+                        for episode in episodes:
+                            synced_file = None
+                            for available_file, stat in available_files.items():
+                                if matcher(episode.get('episode_number'), available_file, 'episode'):
+                                    print(season.get('season_number'),
+                                          ' | ',
+                                          episode.get('episode_number'),
+                                          ' => ',
+                                          available_file)
+                                    episode_video = None
+                                    try:
+                                        episode_video = tv_shows.video_set.get_or_create(tmdb_id=episode['id'])[0]
+                                        episode_video.name = episode['name']
+                                        episode_video.description = episode['overview']
+                                        episode_video.rating = episode['vote_average']
+                                        episode_video.season_no = episode['season_number']
+                                        episode_video.type = 'T'
+                                        episode_video.location = os.path.join(
+                                            location,
+                                            available_seasons_dir,
+                                            available_file
+                                        )
+                                        if episode['still_path']:
+                                            episode_video.thumbnail = TMDBAPI.TMDB_IMAGE_URL + episode['still_path']
+                                        episode_video.save()
+                                        synced_file = available_file
+                                    except Exception as ex:
+                                        if episode_video:
+                                            episode_video.delete()
+                                        print(ex)
+                                        traceback.print_exc()
+
+                            if synced_file:
+                                del available_files[synced_file]
 
         tv_shows.save()
         return True
@@ -210,126 +404,3 @@ def add_movie_to_db(tmdb_data, filename):
         print('Ex--------------', e)
         traceback.print_exc()
         return False
-
-
-class TMDBAPI:
-    TMDB_API_KEY = 'adfff9c3b0688cc13ae8d7b0291b257e'
-    TMDB_URL = 'https://api.themoviedb.org/3'
-    TMDB_IMAGE_URL = 'https://image.tmdb.org/t/p/original'
-    TMDB_EXTRAS = '?api_key={api_key}&language=en-US'.format(api_key=TMDB_API_KEY)
-
-    def search_movie(self, search_key=None):
-        # print('---------', search_key)
-        search_url = self.TMDB_URL + '/search/movie' + self.TMDB_EXTRAS \
-                     + "&query={search_key}&page=1&include_adult=false".format(search_key=search_key)
-        response = requests.get(search_url)
-        return response
-
-    def search_tv(self, search_key=None):
-        # print('---------', search_key)
-        search_url = self.TMDB_URL + '/search/tv' + self.TMDB_EXTRAS \
-                     + "&query={search_key}&page=1&include_adult=false".format(search_key=search_key)
-        response = requests.get(search_url)
-        return response
-
-    def get_movie_by_id(self, movie_id):
-        movie_url = self.TMDB_URL + '/movie/{movie_id}'.format(movie_id=movie_id) + self.TMDB_EXTRAS
-        response = requests.get(movie_url)
-        return response.json()
-
-    def get_tv_show_by_id(self, movie_id):
-        tv_url = self.TMDB_URL + '/tv/{movie_id}'.format(movie_id=movie_id) + self.TMDB_EXTRAS
-        response = requests.get(tv_url)
-        return response.json()
-
-    def get_collection_by_id(self, collection_id):
-        collection_url = self.TMDB_URL + '/collection/{collection_id}'.format(
-            collection_id=collection_id) + self.TMDB_EXTRAS
-        # print(collection_id, type(collection_id), ' | ', collection_url)
-        response = requests.get(collection_url)
-        return response.json()
-
-    def get_all_genre(self):
-        genre_url = self.TMDB_URL + '/genre/movie/list' + self.TMDB_EXTRAS
-        # print(genre_url)
-        response = requests.get(genre_url)
-        genres = dict()
-        for genre in response.json().get('genres'):
-            genres[genre['id']] = genre['name']
-        return genres
-
-    def get_trailer(self, tmdb_id, media_type=None):
-
-        trailer_url = self.TMDB_URL + '/{media_type}/{tmdb_id}/videos'.format(
-            media_type=media_type.lower(),
-            tmdb_id=tmdb_id
-        ) + self.TMDB_EXTRAS
-        # print(trailer_url)
-        response = requests.get(trailer_url)
-        data = response.json()['results']
-        trailer = None
-        for video in data:
-            if video.get('type') == "Trailer":
-                return 'https://www.youtube.com/watch?v=' + video.get('key')
-        return None
-
-    # https://api.themoviedb.org/3/tv/71912/external_ids?api_key=adfff9c3b0688cc13ae8d7b0291b257e&language=en-US
-    def get_external_ids(self, tmdb_id, media_type=None):
-        external_ids_url = self.TMDB_URL + '/{media_type}/{tmdb_id}/external_ids'.format(
-            media_type=media_type.lower(),
-            tmdb_id=tmdb_id
-        ) + self.TMDB_EXTRAS
-        return requests.get(external_ids_url).json()
-
-# https://webservice.fanart.tv/v3/movies/673?api_key=0a07e4f6e89f662683254b31e370bedb
-class FanartAPI:
-    FANART_API_KEY = '0a07e4f6e89f662683254b31e370bedb'
-    FANART_URL = 'https://webservice.fanart.tv/v3'
-    FANART_EXTRAS = '?api_key={api_key}'.format(api_key=FANART_API_KEY)
-
-    def get_logo_and_thumbnail(self, tmdb_id, media_type=None):
-        res = dict()
-        media_id = None
-        if media_type.lower() == 'movie':
-            media_id = tmdb_id
-            media_type = media_type.lower()
-        elif media_type.lower() == 'tv':
-            tmdbapi = TMDBAPI()
-            external_ids = tmdbapi.get_external_ids(tmdb_id=tmdb_id, media_type=media_type)
-            media_id = external_ids.get('tvdb_id')
-            media_type = media_type.lower()
-        logo_and_thumbnail_url = self.FANART_URL + '/{media_type}/{id}'.format(
-            media_type=media_type,
-            id=media_id
-        ) + self.FANART_EXTRAS
-        response = requests.get(logo_and_thumbnail_url)
-        data = response.json()
-        # print("line: 183", data)
-        if data.get('{media_type}logo'.format(media_type=media_type)):
-            for logo in data['{media_type}logo'.format(media_type=media_type)]:
-                if logo['lang'] == 'en':
-                    res['logo'] = logo['url']
-                    break
-            if not res['logo']:
-                res['logo'] = data['{media_type}logo'.format(media_type=media_type)][0]['url']
-        elif data.get('hd{media_type}logo'.format(media_type=media_type)):
-            for logo in data['hd{media_type}logo'.format(media_type=media_type)]:
-                if logo['lang'] == 'en':
-                    res['logo'] = logo['url']
-                    break
-            if not res['logo']:
-                res['logo'] = data['hd{media_type}logo'.format(media_type=media_type)][0]['url']
-        else:
-            res['logo'] = None
-
-        if data.get('{media_type}thumb'.format(media_type=media_type)):
-            for logo in data['{media_type}thumb'.format(media_type=media_type)]:
-                if logo['lang'] == 'en':
-                    res['thumbnail'] = logo['url']
-                    break
-            if not res['logo']:
-                res['thumbnail'] = data['{media_type}thumb'.format(media_type=media_type)][0]['url']
-        else:
-            res['thumbnail'] = None
-
-        return res

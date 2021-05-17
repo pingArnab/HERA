@@ -23,11 +23,16 @@ class Sync(APIView):
         for tv_show_name, details in tvs.items():
             tv_search_key = re.compile('[\w ]*').match(tv_show_name).group()
             response = tmdbapi.search_tv(tv_search_key).json()
-            print(tv_search_key, response)
+            # print(tv_search_key, response)
             if response["results"]:
-                tvs[tv_show_name].append(response["results"][0]["id"])
-                tvs[tv_show_name].append(response["results"][0]["name"])
-                sync_status = utils.add_tv_show_to_db(tmdbapi.get_tv_show_by_id(response["results"][0]["id"]))
-                tvs[tv_show_name].append({'sync_status': sync_status})
+                sync_status = utils.add_tv_show_to_db(tmdbapi.get_tv_show_by_id(
+                    response["results"][0]["id"]),
+                    details.get('location')
+                )
+                tvs[tv_show_name].update({
+                    'tmdb_id': response["results"][0]["id"],
+                    'name': response["results"][0]["name"],
+                    'sync_status': sync_status
+                })
 
         return Response({'movies': movies, 'tvs': tvs})
