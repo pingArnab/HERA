@@ -28,7 +28,7 @@ class SingleMovieCollectionSerializer(serializers.ModelSerializer):
         )
 
     def get_parts(self, obj):
-        parts = obj.video_set  # Video.objects.filter(list=obj)
+        parts = obj.video_set.all().order_by('release_date')  # Video.objects.filter(list=obj)
         return MovieCollectionPartsSerializer(parts, many=True).data
 
 
