@@ -305,8 +305,9 @@ def add_tv_show_to_db(tmdb_data, location=None, media_dir_hash=None):
                                         episode_video.rating = episode['vote_average']
                                         episode_video.season_no = episode['season_number']
                                         episode_video.type = 'T'
-                                        episode_video.location = '/media{show}/{season}/{episode}'.format(
-                                            show=media_dir_hash,
+                                        episode_video.location = '/media{media_hash}/{show}/{season}/{episode}'.format(
+                                            media_hash=media_dir_hash,
+                                            show=location.split('\\')[-1],
                                             season=available_seasons_dir,
                                             episode=available_file
                                         )
