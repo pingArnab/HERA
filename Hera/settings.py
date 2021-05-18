@@ -133,11 +133,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-file = open(BASE_DIR / 'staticfiles_dirs.csv', 'r')
-media_dirs = utils.get_media_dirs(file.readlines())
-file.close()
-MOVIES_DIRS_MAP = media_dirs.get('movie_dir_map')
-TVSHOWS_DIRS_MAP = media_dirs.get('tv_dir_map')
+CONFIG = utils.Config(BASE_DIR / 'config.yaml')
+print(CONFIG.get())
+MOVIES_DIRS_MAP = CONFIG.get_movie_dirs_map()
+TVSHOWS_DIRS_MAP = CONFIG.get_tv_dirs_map()
 
 
 staticfiles_dir = [BASE_DIR / "static"]
