@@ -94,18 +94,27 @@ class MovieListSerializer(serializers.ModelSerializer):
 
 class SingleTVShowSerializer(serializers.ModelSerializer):
     genres = serializers.SerializerMethodField()
+    seasons = serializers.SerializerMethodField()
 
     class Meta:
         model = TVShow
         fields = (
             'name', 'description', 'tmdb_id', 'logo', 'background_image', 'genres',
-            'season_count', 'rating', 'poster_image', 'thumbnail',
+            'season_count', 'rating', 'poster_image', 'thumbnail', 'seasons'
         )
 
     @staticmethod
     def get_genres(obj):
         genre_list = obj.genre.all()
         return GenreSerializer(genre_list, many=True).data
+
+    @staticmethod
+    def get_seasons(obj):
+        seasons_list = list(obj.video_set.values_list('season_no', flat=True).distinct())
+        seasons = dict()
+        for season in seasons_list:
+            seasons[int(season)] = TVShowEpisodeSerializer(obj.video_set.filter(season_no=int(season)), many=True).data
+        return seasons
 
 
 class GenreSerializer(serializers.ModelSerializer):
