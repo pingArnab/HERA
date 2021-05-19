@@ -3,7 +3,6 @@ from . import views
 
 urlpatterns = [
 
-    path('media-folders/', views.handle_media_dirs),
     path('movie-collection-list/', views.MovieCollectionList.as_view()),
     path('movie-collection/<str:movie_collection_id>/', views.MovieCollectionDetails.as_view()),
     path('random-media/', views.RandomMedia.as_view()),

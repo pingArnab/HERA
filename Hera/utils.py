@@ -79,12 +79,12 @@ class Config:
         return self.__tv_dirs_map
 
     def add_to_tv_dirs(self, new_tv_dir):
-        if Path(new_tv_dir).exists():
+        if Path(new_tv_dir).exists() and (new_tv_dir not in self.__config['tv_dir']):
             self.__config['tv_dir'].append(new_tv_dir)
             self.__tv_dirs_map[hashlib.md5(new_tv_dir.encode('utf-8')).hexdigest()] = Path(new_tv_dir)
 
     def add_to_movie_dirs(self, new_movie_dir):
-        if Path(new_movie_dir).exists():
+        if Path(new_movie_dir).exists() and (new_movie_dir not in self.__config['movie_dir']):
             self.__config['movie_dir'].append(new_movie_dir)
             self.__movie_dirs_map[hashlib.md5(new_movie_dir.encode('utf-8')).hexdigest()] = Path(new_movie_dir)
 
