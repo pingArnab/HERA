@@ -103,7 +103,7 @@ class MovieList(APIView):
         elif str(sort_type).lower().strip() == 'newly-added':
             sorted_movies = movies.order_by('-timestamp')
         else:
-            sorted_movies = movies
+            sorted_movies = movies.order_by('name')
 
         serializer = MovieListSerializer(sorted_movies[:count] if count else sorted_movies, many=True)
         return Response(serializer.data)
@@ -119,11 +119,13 @@ class Search(APIView):
             search_filters.append(Q(name__icontains=key))
             search_filters.append(Q(description__icontains=key))
             if Genre.objects.filter(name__icontains=key):
-                search_filters.append(Q(genre=Genre.objects.get(name__icontains=key)))
+                search_filters.append(Q(genre=Genre.objects.filter(name__icontains=key).first()))
 
-        video = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by('-popularity')
-        serializer = MovieListSerializer(video, many=True)
-        return Response(serializer.data)
+        movie_query = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by('-popularity')
+        tv_query = TVShow.objects.filter(type='T').filter(reduce(operator.or_, search_filters)).order_by('-popularity')
+        movies = MovieListSerializer(movie_query, many=True).data
+        tvs = TVShowListSerializer(tv_query, many=True).data
+        return Response(movies + tvs)
 
 
 @permission_classes([IsAuthenticated])
@@ -147,7 +149,7 @@ class TVList(APIView):
         elif str(sort_type).lower().strip() == 'newly-added':
             sorted_tvs = tvs.order_by('-timestamp')
         else:
-            sorted_tvs = tvs
+            sorted_tvs = tvs.order_by('name')
 
         serializer = TVShowListSerializer(sorted_tvs[:count] if count else sorted_tvs, many=True)
         return Response(serializer.data)
