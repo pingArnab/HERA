@@ -49,7 +49,7 @@ class HeraApplication(tk.Frame):
         thread = CmdThreadExe(self.__start_cmd)
         thread.daemon = True
         thread.start()
-        self.output.insert(tk.END, 'Server running at port: {port}'.format(port=self.__port))
+        self.output.insert(tk.END, '\n\nServer running at port: {port}'.format(port=self.__port))
 
     def __stop_server(self):
         current_dir = os.getcwd()
@@ -58,8 +58,9 @@ class HeraApplication(tk.Frame):
         if err:
             self.output.insert(tk.END, err)
         if out:
-            self.output.insert(tk.END, '\nServer Stopped')
+            self.output.insert(tk.END, '\n\n')
             self.output.insert(tk.END, out)
+            self.output.insert(tk.END, 'Server Stopped')
 
     def __close(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
