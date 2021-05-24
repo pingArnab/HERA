@@ -3,6 +3,7 @@ from subprocess import Popen, PIPE, call
 import os
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import scrolledtext
 
 
 class HeraApplication(tk.Frame):
@@ -20,7 +21,10 @@ class HeraApplication(tk.Frame):
         self.label = tk.Label(master, text="Fact of the Day")
         self.startServer = tk.Button(self)
         self.stopServer = tk.Button(self)
-        self.output = tk.Text(root, bg="light cyan")
+        # self.output = tk.Text(root, bg="light cyan")
+        self.output = scrolledtext.ScrolledText(
+            self
+        )
 
         self.__port = port
         self.master = master
@@ -73,7 +77,7 @@ class HeraApplication(tk.Frame):
         self.stopServer["command"] = self.__stop_server
         self.stopServer.pack(side="top")
 
-        self.output.see(tk.END)
+        self.output.focus()
         self.output.pack(side="bottom")
 
         # self.pack(side="bottom")
