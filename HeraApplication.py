@@ -7,7 +7,9 @@ from tkinter import messagebox
 
 class HeraApplication(tk.Frame):
     def __init__(self, master=None, port=None):
+        master.geometry("720x300")
         master.protocol("WM_DELETE_WINDOW", self.__close)
+        master.title("Hera")
         super().__init__(master)
         self.__port = port
         self.__start_cmd = r'.\venv\Scripts\python.exe manage.py runserver {port}'.format(port=port)
@@ -15,8 +17,11 @@ class HeraApplication(tk.Frame):
             port=port or 8000
         )
 
+        self.label = tk.Label(master, text="Fact of the Day")
         self.startServer = tk.Button(self)
         self.stopServer = tk.Button(self)
+        self.output = tk.Text(root, bg="light cyan")
+
         self.__port = port
         self.master = master
         self.pack()
@@ -40,17 +45,26 @@ class HeraApplication(tk.Frame):
         thread = CmdThreadExe(self.__start_cmd)
         thread.daemon = True
         thread.start()
-        print('Server running at port: ', self.__port)
+        self.output.insert(tk.END, 'Server running at port: {port}'.format(port=self.__port))
 
     def __stop_server(self):
         current_dir = os.getcwd()
-        call(self.__stop_cmd, cwd=current_dir, shell=True)
+        ps = Popen(self.__stop_cmd, cwd=current_dir, shell=True, stdout=PIPE, stderr=PIPE)
+        out, err = ps.communicate()
+        if err:
+            self.output.insert(tk.END, err)
+        if out:
+            self.output.insert(tk.END, '\nServer Stopped')
+            self.output.insert(tk.END, out)
 
     def __close(self):
-        self.__stop_server()
-        self.master.destroy()
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.__stop_server()
+            self.master.destroy()
 
     def create_widgets(self):
+        self.label.config(font=("Courier", 14))
+
         self.startServer["text"] = "Start / Restart"
         self.startServer["command"] = self.__start_server
         self.startServer.pack(side="top")
@@ -59,7 +73,10 @@ class HeraApplication(tk.Frame):
         self.stopServer["command"] = self.__stop_server
         self.stopServer.pack(side="top")
 
-        self.pack(side="bottom")
+        self.output.see(tk.END)
+        self.output.pack(side="bottom")
+
+        # self.pack(side="bottom")
 
 
 if __name__ == '__main__':
