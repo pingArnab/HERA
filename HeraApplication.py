@@ -55,7 +55,7 @@ def stop_server():
 
 
 def close():
-    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+    if messagebox.askokcancel("Quit", "Do you want to close Hera?"):
         stop_server()
         root.destroy()
 
@@ -86,9 +86,9 @@ restart_button = Button(
     font=button_font,
     command=start_server
 )
-quit_button = Button(
+close_button = Button(
     root,
-    text="Quit HERA",
+    text="CLOSE HERA",
     fg=Color.BLARK,
     bg=Color.BASIC_WHITE,
     font=button_font,
@@ -120,7 +120,7 @@ version_text = Label(
 left.place(x=0, y=0, height=Position.WINDOW_HEIGHT, width=Position.WINDOW_WIDTH)
 right.place(x=400, y=0, height=Position.WINDOW_HEIGHT, width=155)
 restart_button.place(x=Position.PADDED_LEFT, y=243, height=30, width=130)
-quit_button.place(x=197, y=243, height=30, width=130)
+close_button.place(x=197, y=243, height=30, width=130)
 logo_mark.place(x=Position.PADDED_LEFT, y=110, width=121, height=52)
 description.place(x=Position.PADDED_LEFT - 7, y=175, width=350)
 version_text.place(x=504, y=375, width=38, height=6)
