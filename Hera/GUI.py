@@ -1,10 +1,14 @@
+import logging
 import os
+import subprocess
 import threading
 from subprocess import Popen, PIPE
 from tkinter import *
 import tkinter.font as font
 from tkinter import messagebox
 from PIL import ImageTk, Image
+
+logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
 
 
 class Color:
@@ -32,6 +36,7 @@ class HeraGUI(Frame):
 
     def __init__(self, instance, media_url=None):
         super().__init__(instance)
+        logging.info('Starting App')
         self.root = instance
         self.MEDIA_URL = media_url
         self.__configure_window()
@@ -42,8 +47,11 @@ class HeraGUI(Frame):
         self.root.geometry("{width}x{height}".format(width=Position.WINDOW_WIDTH, height=Position.WINDOW_HEIGHT))
         self.root.resizable(0, 0)
         self.root.protocol("WM_DELETE_WINDOW", self.__close)
-        self.root.title('HERA')
-        self.root.iconbitmap(self.MEDIA_URL + 'favicon.ico')
+        try:
+            self.root.iconbitmap(self.MEDIA_URL + 'favicon.ico')
+            self.root.title('HERA')
+        except Exception as ex:
+            self.root.title('Error in iconbitmap')
 
     def __load_components(self):
         button_font = font.Font(family='Arial', size=8, weight='bold')
@@ -51,8 +59,12 @@ class HeraGUI(Frame):
         version_font = font.Font(family='Arial', size=5)
 
         self.left = Label(self.root, bg=Color.BLARK)
-        self.__right_img = ImageTk.PhotoImage(Image.open(self.MEDIA_URL + 'Path 34.png'))
-        self.right = Label(self.root, image=self.__right_img, bg=Color.BLARK)
+        try:
+            self.__right_img = ImageTk.PhotoImage(Image.open(self.MEDIA_URL + 'Path 34.png'))
+            self.right = Label(self.root, image=self.__right_img, bg=Color.BLARK)
+        except Exception as ex:
+            self.right = Label(self.root, text='Error in Right Image Area', bg=Color.BLARK)
+
         self.restart_button = Button(
             self.root,
             text="RESTART HERA",
@@ -69,12 +81,13 @@ class HeraGUI(Frame):
             font=button_font,
             command=self.__close
         )
-        self.__logo_mark_image = ImageTk.PhotoImage(Image.open(self.MEDIA_URL + 'logo_mark.png'))
-        self.logo_mark = Label(
-            self.root,
-            image=self.__logo_mark_image,
-            bg=Color.BLARK
-        )
+
+        try:
+            self.__logo_mark_image = ImageTk.PhotoImage(Image.open(self.MEDIA_URL + 'logo_mark.png'))
+            self.logo_mark = Label(self.root, image=self.__logo_mark_image, bg=Color.BLARK)
+        except Exception as ex:
+            self.logo_mark = Label(self.root, text='Error in logo_mark area', bg=Color.BLARK)
+
         self.description = Label(
             self.root,
             text='HERA is a home media server used to organize your collection of movies and \n'
@@ -109,25 +122,39 @@ class HeraGUI(Frame):
                 self.__pid = self.__out = self.__err = None
 
             def run(self):
+                logging.info('Threading')
                 current_dir = os.getcwd()
-                ps = Popen(self.__cmd, cwd=current_dir, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-                self.__pid = ps.pid
-                self.__out, self.__err = ps.communicate()
+                try:
+                    ps = Popen(self.__cmd, cwd=current_dir, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                    self.__pid = ps.pid
+                    logging.info(self.__pid)
+                    self.__out, self.__err = ps.communicate()
+                except Exception as ex:
+                    logging.error('Error in Run Server\n')
+                    logging.error(ex)
+                logging.info(self.__out, self.__err)
 
         self.__stop_server()
+        logging.info('Starting...')
         thread = CmdThreadExe(Sys.START_CMD)
         thread.daemon = True
         thread.start()
+        logging.info('Started')
 
     def __stop_server(self):
+        logging.info('Stopping Server')
         current_dir = os.getcwd()
-        ps = Popen(Sys.STOP_CMD, cwd=current_dir, shell=True, stdout=PIPE, stderr=PIPE)
-        out, err = ps.communicate()
+        try:
+            ps = subprocess.Popen(Sys.STOP_CMD, cwd=current_dir, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+            ps.communicate()
+        except Exception as ex:
+            logging.error('Error in Stop server')
+            logging.error(ex)
 
     def __close(self):
         if messagebox.askokcancel("Quit", "Do you want to close Hera?"):
-            self.__stop_server()
             self.root.destroy()
+            self.__stop_server()
 
     def start_app(self):
         self.mainloop()
