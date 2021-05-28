@@ -11,6 +11,6 @@ urlpatterns = [
     path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
 
     path('recommendation/', views.Recommendation.as_view()),
-    path('wishlist/', views.Wishlist.as_view()),
+    path('wishlist/', views.wishlist),
 
 ]
