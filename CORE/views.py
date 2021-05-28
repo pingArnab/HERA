@@ -12,6 +12,7 @@ from django.db.models import Q
 from functools import reduce
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
+from USER.models import Watchlist
 
 
 # Create your views here.
@@ -34,14 +35,20 @@ class MovieCollectionDetails(APIView):
         return Response(serializer.data)
 
 
+@permission_classes([IsAuthenticated])
 class MovieDetails(APIView):
     def get(self, request, movie_id, format=None):
         try:
             movie = Video.objects.get(tmdb_id=movie_id)
         except Video.DoesNotExist:
             return Response({'error': 'Movie not found'}, status=404)
-        serializer = MovieListSerializer(movie, many=False)
-        return Response(serializer.data)
+        response = serializer = MovieListSerializer(movie, many=False).data
+        if Watchlist.objects.filter(user__dj_user=request.user, video__tmdb_id=movie_id):
+            response['timestamp'] = Watchlist.objects.get(
+                user__dj_user=request.user,
+                video__tmdb_id=movie_id
+            ).video_timestamp
+        return Response(response)
 
 
 class GenreList(APIView):
@@ -121,7 +128,8 @@ class Search(APIView):
             if Genre.objects.filter(name__icontains=key):
                 search_filters.append(Q(genre=Genre.objects.filter(name__icontains=key).first()))
 
-        movie_query = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by('-popularity')
+        movie_query = Video.objects.filter(type='M').filter(reduce(operator.or_, search_filters)).order_by(
+            '-popularity')
         tv_query = TVShow.objects.filter(type='T').filter(reduce(operator.or_, search_filters)).order_by('-popularity')
         movies = MovieListSerializer(movie_query, many=True).data
         tvs = TVShowListSerializer(tv_query, many=True).data
@@ -155,6 +163,7 @@ class TVList(APIView):
         return Response(serializer.data)
 
 
+@permission_classes([IsAuthenticated])
 class TVDetails(APIView):
     def get(self, request, tv_id, format=None):
         try:
@@ -171,4 +180,11 @@ class TVDetails(APIView):
         response = dict()
         response.update(serializer.data)
         response.update({'seasons': seasons})
+
+        if Watchlist.objects.filter(user__dj_user=request.user, tv__tmdb_id=tv_id):
+            response['last_watching'] = Watchlist.objects.get(
+                user__dj_user=request.user,
+                tv__tmdb_id=tv_id
+            ).video.tmdb_id
+
         return Response(response)
