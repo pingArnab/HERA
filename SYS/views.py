@@ -56,7 +56,7 @@ def handle_media_dirs(request, dir_type=None):
 
     # For updating the dir records
     if request.method == 'PUT':
-        body = json.loads(request.body)
+        body = request.data
         if (not body.get('dir')) and (type(body.get('dir')) != str):
             return Response({'error': "Not a valid data, Please send a str in 'dir' key"}, 500)
 
@@ -73,7 +73,7 @@ def handle_media_dirs(request, dir_type=None):
         return Response(settings.CONFIG.get())
 
     if request.method == 'DELETE':
-        body = json.loads(request.body)
+        body = request.data
         if (not body.get('dir')) and (type(body.get('dir')) != str):
             return Response({'error': "Not a valid data, Please send a str in 'dir' key"}, 500)
 
