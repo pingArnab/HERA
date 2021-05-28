@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Media, Video, Genre, TVShow
+from USER.models import Watchlist
 
 
 class MovieCollectionListSerializer(serializers.ModelSerializer):
@@ -50,13 +51,19 @@ class GenreListSerializer(serializers.ModelSerializer):
 
 # ------------------------- new -------------------------
 class TVShowEpisodeSerializer(serializers.ModelSerializer):
+    timestamp = serializers.SerializerMethodField()
 
     class Meta:
         model = Video
         fields = (
             'name', 'description', 'tmdb_id', 'poster_image', 'thumbnail', 'popularity', 'rating',
-            'release_date', 'logo', 'background_image', 'location'
+            'release_date', 'logo', 'background_image', 'location', 'timestamp'
         )
+
+    def get_timestamp(self, obj):
+        user = self.context.get('user')
+        if Watchlist.objects.filter(video__tmdb_id=obj.tmdb_id, user__dj_user=user):
+            return Watchlist.objects.get(video__tmdb_id=obj.tmdb_id, user__dj_user=user).video_timestamp
 
 
 class TVShowListSerializer(serializers.ModelSerializer):

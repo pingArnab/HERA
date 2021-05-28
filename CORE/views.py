@@ -174,7 +174,11 @@ class TVDetails(APIView):
         seasons_list = list(tvs.video_set.values_list('season_no', flat=True).distinct())
         seasons = dict()
         for season in seasons_list:
-            seasons[int(season)] = TVShowEpisodeSerializer(tvs.video_set.filter(season_no=int(season)), many=True).data
+            seasons[int(season)] = TVShowEpisodeSerializer(
+                tvs.video_set.filter(season_no=int(season)),
+                many=True,
+                context={'user': request.user}
+            ).data
 
         serializer = TVShowListSerializer(tvs, many=False)
         response = dict()
