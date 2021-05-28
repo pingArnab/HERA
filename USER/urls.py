@@ -12,5 +12,7 @@ urlpatterns = [
 
     path('recommendation/', views.Recommendation.as_view()),
     path('wishlist/', views.wishlist),
+    path('watchlist/', views.watchlist),
+    path('watchlist/<str:video_id>/', views.watchlist),
 
 ]

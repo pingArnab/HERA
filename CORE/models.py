@@ -84,5 +84,7 @@ class TVShow(Media):
     tagline = models.CharField(max_length=500, null=True, blank=True)
     trailer = models.CharField(max_length=500, blank=True, null=True)
 
+    last_watched_episode = models.ForeignKey(Video, null=True, blank=True, on_delete=models.SET_NULL)
+
     def __str__(self):
         return '{} [{}]'.format(self.name, self.tmdb_id)

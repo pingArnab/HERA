@@ -25,8 +25,8 @@ class UserProfile(models.Model):
 
 class Watchlist(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    video = models.OneToOneField(Video, on_delete=models.CASCADE)
-    tv = models.OneToOneField(TVShow, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    tv = models.ForeignKey(TVShow, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(choices=STATUS, max_length=2, default=0)
     video_timestamp = models.DurationField(null=True, blank=True)
     last_watched = models.DateTimeField(null=True, blank=True)

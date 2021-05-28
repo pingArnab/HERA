@@ -10,7 +10,7 @@ class UserAdmin(admin.ModelAdmin):
 
 class WatchlistAdmin(admin.ModelAdmin):
     meta = Watchlist
-    list_display = ['user', 'status', 'video_timestamp', 'last_watched', ]
+    list_display = ['user', 'video', 'tv', 'status', 'video_timestamp', 'last_watched', ]
 
 
 admin.site.register(UserProfile, UserAdmin)
