@@ -3,12 +3,20 @@ from django.contrib.auth.models import User as AuthUser
 from django.db import models
 from CORE.models import Video, TVShow
 
+
 # Create your models here.
-STATUS = [
-    ('0', 'UNWATCHED'),
-    ('1', 'WATCHING'),
-    ('2', 'WATCHED')
-]
+class WatchStatus:
+    UNWATCHED = 0
+    WATCHING = 1
+    WATCHED = 2
+
+    @staticmethod
+    def get_all_watch_status():
+        return [
+            ('0', 'UNWATCHED'),
+            ('1', 'WATCHING'),
+            ('2', 'WATCHED')
+        ]
 
 
 class UserProfile(models.Model):
@@ -27,7 +35,7 @@ class Watchlist(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     video = models.ForeignKey(Video, on_delete=models.CASCADE)
     tv = models.ForeignKey(TVShow, on_delete=models.CASCADE, null=True, blank=True)
-    status = models.CharField(choices=STATUS, max_length=2, default=0)
+    status = models.CharField(choices=WatchStatus.get_all_watch_status(), max_length=2, default=0)
     video_timestamp = models.DurationField(null=True, blank=True)
     last_watched = models.DateTimeField(null=True, blank=True)
 

@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 import CORE.models
+import USER.models
 from .serializers import MovieListSerializer, WishlistSerializer
 from .models import UserProfile, Watchlist
 from CORE.models import Video, TVShow
@@ -50,10 +51,10 @@ def watchlist(request, video_id=None):
                 user=userProfile,
                 video=video
             )
-            if timestamp > 0:
-                wishlist_video.status = '2'
+            if timestamp < 0:
+                wishlist_video.status = USER.models.WatchStatus.WATCHED
             else:
-                wishlist_video.status = '1'
+                wishlist_video.status = USER.models.WatchStatus.WATCHING
                 wishlist_video.video_timestamp = timedelta(seconds=timestamp)
 
             wishlist_video.last_watched = datetime.now()
