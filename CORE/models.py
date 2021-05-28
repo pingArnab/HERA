@@ -16,18 +16,25 @@ class Genre(models.Model):
         return '[{}, {}]'.format(self.tmdb_id, self.name)
 
 
-MEDIA_TYPE = [
-    ('M', 'Movie'),
-    ('T', 'TV Shows'),
-    ('U', 'Unidentified'),
-]
+class MediaType:
+    MOVIE = 'M'
+    TV_SHOWS = 'T'
+    UNIDENTIFIED = 'U'
+
+    @staticmethod
+    def get_media_type_options():
+        return [
+            ('M', 'Movie'),
+            ('T', 'TV Shows'),
+            ('U', 'Unidentified'),
+        ]
 
 
 class Media(models.Model):
     tmdb_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    type = models.CharField(max_length=1, choices=MEDIA_TYPE, default='U')
+    type = models.CharField(max_length=1, choices=MediaType.get_media_type_options(), default='U')
     is_collection = models.BooleanField(default=False)
 
     background_image = models.CharField(max_length=500, blank=True, null=True)
@@ -43,14 +50,14 @@ class Video(models.Model):  # Movies and Episode
     name = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     location = models.CharField(max_length=200)
-    type = models.CharField(max_length=1, choices=MEDIA_TYPE, default='U')
+    type = models.CharField(max_length=1, choices=MediaType.get_media_type_options(), default='U')
     thumbnail = models.CharField(max_length=500, blank=True, null=True)
     rating = models.FloatField(default=0)
     release_date = models.DateField(null=True, blank=True)
     added_at = models.DateTimeField(auto_now_add=True)
 
     genre = models.ManyToManyField(Genre, blank=True)  # Movie
-    logo = models.CharField(max_length=500, blank=True, null=True) # Movie
+    logo = models.CharField(max_length=500, blank=True, null=True)  # Movie
     poster_image = models.CharField(max_length=500, blank=True, null=True)  # Movie
     background_image = models.CharField(max_length=500, blank=True, null=True)  # Movie
     popularity = models.FloatField(null=True, blank=True)  # Movie
@@ -79,6 +86,3 @@ class TVShow(Media):
 
     def __str__(self):
         return '{} [{}]'.format(self.name, self.tmdb_id)
-
-
-
