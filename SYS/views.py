@@ -98,7 +98,7 @@ def handle_media_dirs(request, dir_type=None):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_count(request, count_type: str = None):
-    if request.user.is_superuser or request.user.is_staff:
+    if not request.user.is_superuser or not request.user.is_staff:
         return Response({'error': 'Permission Denied !'}, status=403)
     if count_type.upper() == 'MOVIE':
         return Response({
