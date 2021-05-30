@@ -1,15 +1,19 @@
 import json
 import re
-from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
+import CORE.models
 from Hera import settings
 from pathlib import Path
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from . import utils
 
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.decorators import permission_classes
+
+from CORE.models import Video, TVShow
+from django.contrib.auth.models import User as AuthUser
 
 class Sync(APIView):
     def get(self, request, format=None):
@@ -89,3 +93,24 @@ def handle_media_dirs(request, dir_type=None):
 
         settings.CONFIG.update()
         return Response(settings.CONFIG.get())
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_count(request, count_type: str = None):
+    if request.user.is_superuser or request.user.is_staff:
+        return Response({'error': 'Permission Denied !'}, status=403)
+    if count_type.upper() == 'MOVIE':
+        return Response({
+            'count': Video.objects.filter(type=CORE.models.MediaType.MOVIE).count()
+        })
+    elif count_type.upper() == 'TV':
+        return Response({
+            'count': TVShow.objects.all().count()
+        })
+    elif count_type.upper() == 'USER':
+        return Response({
+            'count': AuthUser.objects.all().count()
+        })
+    else:
+        return Response({'error': 'Invalid type'}, status=400)
