@@ -27,7 +27,7 @@ if settings.DEBUG:
     urlpatterns += [path('admin/', admin.site.urls)]
 
 urlpatterns += [
-   path(API_PATH, include('djoser.urls')),
+   # path(API_PATH, include('djoser.urls')),
    # path(API_PATH, include('djoser.urls.authtoken')),
 
    path(API_PATH, include('CORE.urls')),
