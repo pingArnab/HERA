@@ -10,6 +10,9 @@ urlpatterns = [
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
 
+    path('create/', views.CreateUser.as_view(), name='create_user'),
+    # print('my-profile', view.)
+
     path('recommendation/', views.Recommendation.as_view()),
     path('wishlist/', views.wishlist),
     path('watchlist/', views.watchlist),

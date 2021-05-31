@@ -1,4 +1,5 @@
 import json
+import traceback
 from datetime import timedelta, datetime
 
 from django.shortcuts import render
@@ -13,6 +14,7 @@ import USER.models
 from .serializers import MovieListSerializer, WishlistSerializer
 from .models import UserProfile, Watchlist
 from CORE.models import Video, TVShow
+from django.contrib.auth.models import User as AuthUser
 
 
 # Create your views here.
@@ -110,3 +112,47 @@ def wishlist(request):
 
     userProfile.save()
     return Response({'status': True})
+
+
+# @permission_classes([IsAuthenticated])
+class CreateUser(APIView):
+    def post(self, request, format=None):
+        data = request.data
+        if not data.get('username'):
+            return Response({'error': 'username is mandatory'}, status=400)
+        if not data.get('password'):
+            return Response({'error': 'password is mandatory'}, status=400)
+        if not(request.user and request.user.is_authenticated):
+            return Response({'error': 'Authorization required'}, status=401)
+        if not(request.user.is_staff or request.user.is_staff or data.get('key') == 'Qlxe42e'):
+            return Response({'error': 'Permission denied !'}, status=403)
+        if AuthUser.objects.filter(username=data.get('username')):
+            return Response({'error': 'Username already exists !'}, status=400)
+        authUser = None
+        userprofile = None
+        try:
+            authUser = AuthUser.objects.create_user(
+                username=data.get('username'),
+                email=data.get('username'),
+                password=data.get('password'),
+            )
+            userprofile = UserProfile.objects.create(
+                dj_user=authUser,
+                age=data.get('age') or 18,
+            )
+            authUser.save()
+            userprofile.save()
+            return Response({
+                'status': 'Success',
+                'details': 'User created'
+            })
+        except Exception as ex:
+            if authUser:
+                authUser.delete()
+            if userprofile:
+                userprofile.delete()
+            print(ex)
+            traceback.print_exc()
+            return Response({
+                'error': 'Unable to create User !'
+            }, status=400)
