@@ -1,8 +1,7 @@
 from rest_framework import serializers
-
 from CORE.models import Video
-
 from .models import Watchlist, UserProfile
+from django.contrib.auth.models import User as AuthUser
 
 
 class MovieListSerializer(serializers.ModelSerializer):
@@ -30,10 +29,22 @@ class GenreDetailsSerializer(serializers.ModelSerializer):
 
 
 class WishlistSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Video
         fields = (
             'tmdb_id', 'name', 'description', 'genre', 'type', 'poster_image', 'thumbnail'
         )
 
+
+class UserSerializer(serializers.ModelSerializer):
+    fullname = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AuthUser
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'fullname', 'is_staff', 'is_superuser'
+        )
+
+    @staticmethod
+    def get_fullname(obj):
+        return obj.get_full_name()

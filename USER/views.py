@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view
 
 import CORE.models
 import USER.models
-from .serializers import MovieListSerializer, WishlistSerializer
+from .serializers import MovieListSerializer, WishlistSerializer, UserSerializer
 from .models import UserProfile, Watchlist
 from CORE.models import Video, TVShow
 from django.contrib.auth.models import User as AuthUser
@@ -136,6 +136,8 @@ class CreateUser(APIView):
                 email=data.get('username'),
                 password=data.get('password'),
             )
+            authUser.first_name = data.get('firstname')
+            authUser.last_name = data.get('lastname')
             userprofile = UserProfile.objects.create(
                 dj_user=authUser,
                 age=data.get('age') or 18,
@@ -156,3 +158,10 @@ class CreateUser(APIView):
             return Response({
                 'error': 'Unable to create User !'
             }, status=400)
+
+
+@permission_classes([IsAuthenticated])
+class Profile(APIView):
+    def get(self, request, format=None):
+        serializer = UserSerializer(request.user, many=False)
+        return Response(serializer.data)
