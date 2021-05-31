@@ -15,6 +15,7 @@ from rest_framework.decorators import permission_classes
 from CORE.models import Video, TVShow
 from django.contrib.auth.models import User as AuthUser
 
+
 class Sync(APIView):
     def get(self, request, format=None):
         tmdbapi = utils.TMDBAPI()
@@ -95,8 +96,8 @@ def handle_media_dirs(request, dir_type=None):
         return Response(settings.CONFIG.get())
 
 
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
 def get_count(request, count_type: str = None):
     if not request.user.is_superuser or not request.user.is_staff:
         return Response({'error': 'Permission Denied !'}, status=403)
