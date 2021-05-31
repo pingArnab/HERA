@@ -114,18 +114,22 @@ def wishlist(request):
     return Response({'status': True})
 
 
-# @permission_classes([IsAuthenticated])
-class CreateUser(APIView):
-    def post(self, request, format=None):
-        data = request.data
+@api_view(['GET', 'POST', 'DELETE'])
+def user_operations(request):
+    data = request.data
+    if not (request.user and request.user.is_authenticated):
+        return Response({'error': 'Authorization required'}, status=401)
+    if not (request.user.is_staff or request.user.is_staff):
+        return Response({'error': 'Permission denied !'}, status=403)
+
+    if request.method == 'GET':
+        all_users = AuthUser.objects.all()
+        return Response(UserSerializer(all_users, many=True).data)
+    elif request.method == 'POST':
         if not data.get('username'):
             return Response({'error': 'username is mandatory'}, status=400)
         if not data.get('password'):
             return Response({'error': 'password is mandatory'}, status=400)
-        if not(request.user and request.user.is_authenticated):
-            return Response({'error': 'Authorization required'}, status=401)
-        if not(request.user.is_staff or request.user.is_staff or data.get('key') == 'Qlxe42e'):
-            return Response({'error': 'Permission denied !'}, status=403)
         if AuthUser.objects.filter(username=data.get('username')):
             return Response({'error': 'Username already exists !'}, status=400)
         authUser = None
@@ -158,6 +162,20 @@ class CreateUser(APIView):
             return Response({
                 'error': 'Unable to create User !'
             }, status=400)
+    elif request.method == 'DELETE':
+        if not(data.get('username')):
+            return Response({'error': 'username is mandatory'}, status=400)
+        if data.get('username') == request.user.username:
+            return Response({'error': 'Deleting yourself not allowed'}, status=400)
+        try:
+            auth_user = AuthUser.objects.get(username=data.get('username'))
+            auth_user.delete()
+            return Response({'status': 'User Deleted'})
+        except Exception as ex:
+            traceback.print_exc()
+            return Response({'error': str(ex)})
+    else:
+        return Response({'error': 'Method not allowed'}, status=400)
 
 
 @permission_classes([IsAuthenticated])

@@ -5,12 +5,12 @@ from . import auth
 
 
 urlpatterns = [
+    path('', views.user_operations, name='user_operations'),
 
     path('token/', auth.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
 
-    path('create/', views.CreateUser.as_view(), name='create_user'),
     path('profile/', views.Profile.as_view()),
 
     path('recommendation/', views.Recommendation.as_view()),
