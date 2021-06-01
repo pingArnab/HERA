@@ -140,8 +140,8 @@ def user_operations(request):
                 email=data.get('username'),
                 password=data.get('password'),
             )
-            authUser.first_name = data.get('firstname')
-            authUser.last_name = data.get('lastname')
+            authUser.first_name = data.get('firstname') or ''
+            authUser.last_name = data.get('lastname') or ''
             userprofile = UserProfile.objects.create(
                 dj_user=authUser,
                 age=data.get('age') or 18,
