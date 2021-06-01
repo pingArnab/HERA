@@ -168,6 +168,8 @@ class TVList(APIView):
 @permission_classes([IsAuthenticated])
 class TVDetails(APIView):
     def get(self, request, tv_id, format=None):
+        if not (request.user.is_staff or request.user.is_staff):
+            return Response({'error': 'Permission denied !'}, status=403)
         try:
             tvs = TVShow.objects.get(tmdb_id=tv_id)
         except TVShow.DoesNotExist:
