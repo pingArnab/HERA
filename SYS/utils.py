@@ -337,10 +337,10 @@ def add_tv_show_to_db(tmdb_data, location=None, media_dir_hash=None):
         return False
 
 
-def add_movie_to_db(tmdb_data, filename, media_dir_hash):
+def add_movie_to_db(tmdb_data, location):
     if Video.objects.filter(tmdb_id=tmdb_data['id']):
         video = Video.objects.get(tmdb_id=tmdb_data['id'])
-        video.location = '/media{id}/'.format(id=media_dir_hash) + filename
+        video.location = location
         video.save()
         return True
     video = None
@@ -352,7 +352,7 @@ def add_movie_to_db(tmdb_data, filename, media_dir_hash):
             tmdb_id=tmdb_data.get('id'),
             name=tmdb_data.get('original_title'),
             description=tmdb_data.get('overview'),
-            location='/media{id}/'.format(id=media_dir_hash) + filename,
+            location=location,
             type='M',
             rating=tmdb_data.get('vote_average'),
             added_at=datetime.datetime.now(),

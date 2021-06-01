@@ -28,8 +28,7 @@ class Sync(APIView):
                 movies[movie_name]['title'] = response["results"][0]["original_title"]
                 sync_status = utils.add_movie_to_db(
                     tmdbapi.get_movie_by_id(response["results"][0]["id"]),
-                    movie_name,
-                    details.get('media_dir_hash')
+                    '/media{id}/{filename}'.format(id=details.get('media_dir_hash'), filename=movie_name)
                 )
                 movies[movie_name]['sync_status'] = sync_status
 

@@ -29,6 +29,7 @@ urlpatterns = [
 
     path('search/', views.Search.as_view()),
 
+    path('change-tmdb-id/<str:data_type>/<int:tmdb_id>/', views.change_tmdb_id),
 
     path('mongodb/', views.MongoDb.as_view()),
 ]

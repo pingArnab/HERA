@@ -11,8 +11,9 @@ import random
 from django.db.models import Q
 from functools import reduce
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes
+from rest_framework.decorators import permission_classes, api_view
 from USER.models import Watchlist
+from SYS.utils import add_movie_to_db, TMDBAPI
 
 
 # Create your views here.
@@ -192,3 +193,23 @@ class TVDetails(APIView):
             ).video.tmdb_id
 
         return Response(response)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_tmdb_id(request, data_type: str, tmdb_id):
+    new_tmdb_id = request.data.get('new_tmdb_id')
+    if data_type.upper() == 'MOVIE':
+        if not Video.objects.filter(tmdb_id=tmdb_id):
+            return Response({'error': 'No movie found with the tmdb id: {}'.format(tmdb_id)}, status=400)
+        movie = Video.objects.get(tmdb_id=tmdb_id)
+        tmdbapi = TMDBAPI()
+        print(new_tmdb_id)
+        tmdb_response = tmdbapi.get_movie_by_id(new_tmdb_id)
+        print(tmdb_response)
+        video_url = movie.location
+        movie.delete()
+        add_movie_to_db(tmdb_response, location=video_url)
+        return Response(MovieListSerializer(Video.objects.get(tmdb_id=tmdb_response.get('id')), many=False).data)
+    else:
+        return Response({'error': 'Invalid Media Type in url'}, status=400)
