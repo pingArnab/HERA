@@ -1,5 +1,7 @@
 import json
 import re
+
+from django.db.models import Sum
 from rest_framework.decorators import api_view
 
 import CORE.models
@@ -114,3 +116,24 @@ def get_count(request, count_type: str = None):
         })
     else:
         return Response({'error': 'Invalid type'}, status=400)
+
+
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def get_duration(request):
+    if not request.user.is_superuser or not request.user.is_staff:
+        return Response({'error': 'Permission Denied !'}, status=403)
+
+    total_movie_duration = Video.objects.filter(
+        type=CORE.models.MediaType.MOVIE
+    ).aggregate(Sum('duration')).get('duration__sum')
+
+    total_tv_duration = Video.objects.filter(
+        type=CORE.models.MediaType.TV_SHOWS
+    ).aggregate(Sum('media__tvshow__episode_runtime')).get('media__tvshow__episode_runtime__sum')
+
+    return Response({
+        'total': total_movie_duration + total_tv_duration,
+        'movie': total_movie_duration,
+        'tv': total_tv_duration
+    })

@@ -8,5 +8,6 @@ urlpatterns = [
 
     path('sync/', views.Sync.as_view()),
 
-    path('count/<str:count_type>/', views.get_count)
+    path('count/<str:count_type>/', views.get_count),
+    path('total-media-duration/', views.get_duration)
 ]
