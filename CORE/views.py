@@ -204,9 +204,7 @@ def change_tmdb_id(request, data_type: str, tmdb_id):
             return Response({'error': 'No movie found with the tmdb id: {}'.format(tmdb_id)}, status=400)
         movie = Video.objects.get(tmdb_id=tmdb_id)
         tmdbapi = TMDBAPI()
-        print(new_tmdb_id)
         tmdb_response = tmdbapi.get_movie_by_id(new_tmdb_id)
-        print(tmdb_response)
         video_url = movie.location
         movie.delete()
         add_movie_to_db(tmdb_response, location=video_url)
