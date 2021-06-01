@@ -1,5 +1,6 @@
+import hashlib
 import operator
-
+from pathlib import Path
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import MovieCollectionListSerializer, SingleMovieCollectionSerializer, SingleTVShowSerializer
@@ -13,7 +14,7 @@ from functools import reduce
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes, api_view
 from USER.models import Watchlist
-from SYS.utils import add_movie_to_db, TMDBAPI
+from SYS.utils import add_movie_to_db, add_tv_show_to_db, TMDBAPI
 
 
 # Create your views here.
@@ -209,5 +210,19 @@ def change_tmdb_id(request, data_type: str, tmdb_id):
         movie.delete()
         add_movie_to_db(tmdb_response, location=video_url)
         return Response(MovieListSerializer(Video.objects.get(tmdb_id=tmdb_response.get('id')), many=False).data)
+    elif data_type.upper() == 'TV':
+        if not TVShow.objects.filter(tmdb_id=tmdb_id):
+            return Response({'error': 'No movie found with the tmdb id: {}'.format(tmdb_id)}, status=400)
+        tv = TVShow.objects.get(tmdb_id=tmdb_id)
+        tmdbapi = TMDBAPI()
+        tmdb_response = tmdbapi.get_tv_show_by_id(new_tmdb_id)
+        tv_local_path = tv.local_path
+        tv.delete()
+        add_tv_show_to_db(
+            tmdb_data=tmdb_response,
+            location=tv_local_path,
+            media_dir_hash=hashlib.md5(str(Path(tv_local_path).parent).encode('utf-8')).hexdigest()
+        )
+        return Response(TVShowListSerializer(TVShow.objects.get(tmdb_id=tmdb_response.get('id')), many=False).data)
     else:
         return Response({'error': 'Invalid Media Type in url'}, status=400)

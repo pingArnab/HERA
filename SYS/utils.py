@@ -251,7 +251,7 @@ def add_tv_show_to_db(tmdb_data, location=None, media_dir_hash=None):
         tv_shows.name = tmdb_data.get('name')
         tv_shows.description = tmdb_data.get('overview')
         tv_shows.type = 'T'
-
+        tv_shows.local_path = location
         tv_shows.rating = tmdb_data.get('vote_average')
         tv_shows.popularity = tmdb_data.get('popularity')
         tv_shows.tagline = tmdb_data.get('tagline')

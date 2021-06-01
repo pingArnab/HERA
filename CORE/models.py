@@ -86,5 +86,7 @@ class TVShow(Media):
 
     last_watched_episode = models.ForeignKey(Video, null=True, blank=True, on_delete=models.SET_NULL)
 
+    local_path = models.CharField(max_length=500, blank=True, null=True)
+
     def __str__(self):
         return '{} [{}]'.format(self.name, self.tmdb_id)
