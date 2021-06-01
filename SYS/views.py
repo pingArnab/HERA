@@ -1,5 +1,7 @@
 import json
 import re
+import socket
+import traceback
 
 from django.db.models import Sum
 from rest_framework.decorators import api_view
@@ -16,6 +18,7 @@ from rest_framework.decorators import permission_classes
 
 from CORE.models import Video, TVShow
 from django.contrib.auth.models import User as AuthUser
+from django.conf import settings
 
 
 class Sync(APIView):
@@ -137,3 +140,27 @@ def get_duration(request):
         'movie': total_movie_duration,
         'tv': total_tv_duration
     })
+
+
+@permission_classes([IsAuthenticated])
+@api_view(['PUT'])
+def update_port(request):
+    if not request.user.is_superuser or not request.user.is_staff:
+        return Response({'error': 'Permission Denied !'}, status=403)
+    port = int(request.data.get('port')) if request.data.get('port') else None
+    if not type(port) == int:
+        return Response({'error': 'port is mandatory integer field'}, status=400)
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    API = 'API={local_ip}:{port}/api/v1'.format(local_ip=local_ip, port=port)
+    BACKEND = 'BACKEND={local_ip}:{port}'.format(local_ip=local_ip, port=port)
+    try:
+        with open(settings.BASE_DIR.parent / 'front/.env', 'w') as env:
+            content = API + '\n' + BACKEND
+            env.write(content)
+        with open(settings.BASE_DIR / '.env', 'w') as env:
+            env.write('PORT={port}'.format(port=port+1))
+    except Exception as ex:
+        traceback.print_exc()
+        return Response({'error': str(ex)}, status=400)
+    return Response({'status': True})
