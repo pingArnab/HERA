@@ -2,7 +2,7 @@ import json
 import re
 import socket
 import traceback
-
+import datetime
 from django.db.models import Sum
 from rest_framework.decorators import api_view
 
@@ -129,16 +129,33 @@ def get_duration(request):
 
     total_movie_duration = Video.objects.filter(
         type=CORE.models.MediaType.MOVIE
-    ).aggregate(Sum('duration')).get('duration__sum')
+    ).aggregate(
+        Sum('duration')
+    ).get('duration__sum') or datetime.timedelta(minutes=0)
 
     total_tv_duration = Video.objects.filter(
         type=CORE.models.MediaType.TV_SHOWS
-    ).aggregate(Sum('media__tvshow__episode_runtime')).get('media__tvshow__episode_runtime__sum')
+    ).aggregate(
+        Sum('media__tvshow__episode_runtime')
+    ).get('media__tvshow__episode_runtime__sum') or datetime.timedelta(minutes=0)
+    total_duration = total_movie_duration + total_tv_duration
 
     return Response({
-        'total': total_movie_duration + total_tv_duration,
-        'movie': total_movie_duration,
-        'tv': total_tv_duration
+        'total': {
+            'Hour': int(total_duration.seconds / 3600) if total_duration else 0,
+            'Min': int((total_duration.seconds % 3600) / 60) if total_duration else 0,
+            'total_seconds': total_duration
+        },
+        'movie': {
+            'Hour': int(total_movie_duration.seconds / 3600) if total_movie_duration else 0,
+            'Min': int((total_movie_duration.seconds % 3600) / 60) if total_movie_duration else 0,
+            'total_seconds': total_movie_duration
+        },
+        'tv': {
+            'Hour': int(total_tv_duration.seconds / 3600) if total_tv_duration else 0,
+            'Min': int((total_tv_duration.seconds % 3600) / 60) if total_tv_duration else 0,
+            'total_seconds': total_movie_duration
+        }
     })
 
 
@@ -159,7 +176,7 @@ def update_port(request):
             content = API + '\n' + BACKEND
             env.write(content)
         with open(settings.BASE_DIR / '.env', 'w') as env:
-            env.write('PORT={port}'.format(port=port+1))
+            env.write('PORT={port}'.format(port=port + 1))
     except Exception as ex:
         traceback.print_exc()
         return Response({'error': str(ex)}, status=400)
