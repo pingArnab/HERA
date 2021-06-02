@@ -1,8 +1,9 @@
 import logging
 import os
+from pathlib import Path
 import subprocess
 import threading
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, run
 from tkinter import *
 import tkinter.font as font
 from tkinter import messagebox
@@ -25,10 +26,16 @@ class Position:
 
 
 class Sys:
-    PORT = 8000
-    START_CMD = r'.\venv\Scripts\python.exe manage.py runserver {port}'.format(port=PORT)
-    STOP_CMD = r"""for /f "tokens=5" %a in ('netstat -aon ^| find ":{port}" ^| find "LISTENING"') do taskkill /f /pid %a""".format(
-        port=PORT or 8000
+    BACK_PORT = 8000
+    BACK_START_CMD = r'.\venv\Python\python.exe manage.py runserver 0.0.0.0:{port}'.format(port=BACK_PORT)
+    BACK_STOP_CMD = r"""for /f "tokens=5" %a in ('netstat -aon ^| find ":{port}" ^| find "LISTENING"') do taskkill /f /pid %a""".format(
+        port=BACK_PORT
+    )
+
+    FRONT_PORT = 3000
+    FRONT_START_CMD = r'.\venv\npm run dev'
+    FRONT_STOP_CMD = r"""for /f "tokens=5" %a in ('netstat -aon ^| find ":{port}" ^| find "LISTENING"') do taskkill /f /pid %a""".format(
+        port=FRONT_PORT 
     )
 
 
@@ -116,36 +123,61 @@ class HeraGUI(Frame):
 
     def __start_server(self):
         class CmdThreadExe(threading.Thread):
-            def __init__(self, cmd):
+            def __init__(self, cmd, rundir, tag=None, env={}):
                 super().__init__()
                 self.__cmd = cmd
                 self.__pid = self.__out = self.__err = None
+                self.__rundir = rundir
+                self.__env = env
+                self.__tag = tag + ' :: ' if tag else ''
 
             def run(self):
-                logging.info('Threading')
-                current_dir = os.getcwd()
+                logging.info(self.__tag + 'Threading')
+                # current_dir = os.getcwd()
                 try:
-                    ps = Popen(self.__cmd, cwd=current_dir, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+                    ps = Popen(self.__cmd, env=self.__env, cwd=self.__rundir, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
                     self.__pid = ps.pid
-                    logging.info(self.__pid)
+                    logging.info(self.__tag + str(self.__pid))
                     self.__out, self.__err = ps.communicate()
                 except Exception as ex:
-                    logging.error('Error in Run Server\n')
-                    logging.error(ex)
-                logging.info(self.__out, self.__err)
+                    logging.error(self.__tag + 'Error in Run Server\n')
+                    logging.error(self.__tag + str(ex))
+                logging.error(self.__tag + 'SYS : \n' + str(self.__err.decode("utf-8")).replace('\n', '\t\n'))
+                logging.info(self.__tag + 'SYS : \n' + str(self.__out.decode("utf-8")).replace('\n', '\t\n'))
 
         self.__stop_server()
         logging.info('Starting...')
-        thread = CmdThreadExe(Sys.START_CMD)
+        thread = CmdThreadExe(
+            cmd = Sys.BACK_START_CMD, 
+            rundir=Path(os.getcwd()) / 'back', 
+            tag='BACK_PS', 
+            env=os.environ | {
+                'path': str((Path('back') / 'venv' / 'Python')),
+            }
+        )
         thread.daemon = True
         thread.start()
+
+        thread2 = CmdThreadExe(
+            cmd = Sys.FRONT_START_CMD, 
+            rundir=Path(os.getcwd()) / 'front', 
+            tag='FRONT_PS', 
+            env=os.environ | {
+                'PATH': str((Path('front') / 'venv')),
+            }
+        )
+        thread2.daemon = True
+        thread2.start()
+
         logging.info('Started')
 
     def __stop_server(self):
         logging.info('Stopping Server')
         current_dir = os.getcwd()
         try:
-            ps = subprocess.Popen(Sys.STOP_CMD, cwd=current_dir, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+            ps1 = subprocess.Popen(Sys.FRONT_STOP_CMD, cwd=current_dir, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+            ps1.communicate()
+            ps = subprocess.Popen(Sys.BACK_STOP_CMD, cwd=current_dir, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
             ps.communicate()
         except Exception as ex:
             logging.error('Error in Stop server')
