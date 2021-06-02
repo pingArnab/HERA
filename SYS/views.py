@@ -154,7 +154,7 @@ def get_duration(request):
         'tv': {
             'Hour': int(total_tv_duration.seconds / 3600) if total_tv_duration else 0,
             'Min': int((total_tv_duration.seconds % 3600) / 60) if total_tv_duration else 0,
-            'total_seconds': total_movie_duration
+            'total_seconds': total_tv_duration
         }
     })
 
