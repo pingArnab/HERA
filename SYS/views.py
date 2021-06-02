@@ -142,19 +142,19 @@ def get_duration(request):
 
     return Response({
         'total': {
-            'Hour': int(total_duration.seconds / 3600) if total_duration else 0,
-            'Min': int((total_duration.seconds % 3600) / 60) if total_duration else 0,
-            'total_seconds': total_duration
+            'days': total_duration.days,
+            'Hour': total_duration.seconds // 3600 if total_duration else 0,
+            'Min': (total_duration.seconds % 3600) // 60 if total_duration else 0,
         },
         'movie': {
-            'Hour': int(total_movie_duration.seconds / 3600) if total_movie_duration else 0,
-            'Min': int((total_movie_duration.seconds % 3600) / 60) if total_movie_duration else 0,
-            'total_seconds': total_movie_duration
+            'days': total_movie_duration.days,
+            'Hour': total_movie_duration.seconds // 3600 if total_movie_duration else 0,
+            'Min': (total_movie_duration.seconds % 3600) // 60 if total_movie_duration else 0,
         },
         'tv': {
-            'Hour': int(total_tv_duration.seconds / 3600) if total_tv_duration else 0,
-            'Min': int((total_tv_duration.seconds % 3600) / 60) if total_tv_duration else 0,
-            'total_seconds': total_tv_duration
+            'days': total_tv_duration.days,
+            'Hour': total_tv_duration.seconds // 3600 if total_tv_duration else 0,
+            'Min': (total_tv_duration.seconds % 3600) // 60 if total_tv_duration else 0,
         }
     })
 
