@@ -13,7 +13,7 @@ from django.db.models import Q
 from functools import reduce
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes, api_view
-from USER.models import Watchlist
+from USER.models import Watchlist, UserProfile
 from SYS.utils import add_movie_to_db, add_tv_show_to_db, TMDBAPI
 
 
@@ -50,6 +50,11 @@ class MovieDetails(APIView):
                 user__dj_user=request.user,
                 video__tmdb_id=movie_id
             ).video_timestamp
+
+        response['favourite'] = bool(UserProfile.objects.filter(
+            dj_user=request.user,
+            movie_wishlist__tmdb_id=movie_id)
+        )
         return Response(response)
 
 
@@ -194,7 +199,10 @@ class TVDetails(APIView):
                 user__dj_user=request.user,
                 tv__tmdb_id=tv_id
             ).video.tmdb_id
-
+        response['favourite'] = bool(UserProfile.objects.filter(
+            dj_user=request.user,
+            tv_wishlist__tmdb_id=tv_id)
+        )
         return Response(response)
 
 
