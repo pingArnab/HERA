@@ -106,7 +106,7 @@ def wishlist(request):
             userProfile.movie_wishlist.remove(video)
         elif TVShow.objects.filter(tmdb_id=tmdb_id):
             tv = TVShow.objects.get(tmdb_id=tmdb_id)
-            userProfile.movie_wishlist.remove(tv)
+            userProfile.tv_wishlist.remove(tv)
         else:
             return Response({'error': 'invalid TMDB id in remove wishlist'})
 
