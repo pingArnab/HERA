@@ -21,8 +21,10 @@ itypes==1.2.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
 oauthlib==3.1.0
+Pillow==8.2.0
 pycparser==2.20
 PyJWT==2.1.0
+python-dotenv==0.17.1
 python3-openid==3.2.0
 pytz==2021.1
 PyYAML==5.4.1

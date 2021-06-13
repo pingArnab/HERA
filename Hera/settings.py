@@ -9,14 +9,20 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import os
 from datetime import timedelta
 from pathlib import Path
-
+from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import staticfiles
 from Hera import utils
+from django.core.management.commands.runserver import Command as runserver
 
+load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+runserver.default_port = os.environ.get('PORT') if type(os.environ.get('PORT')) else 8000
+runserver.default_addr = "0.0.0.0"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -164,7 +170,6 @@ CONFIG = utils.Config(BASE_DIR / 'config.yaml')
 print(CONFIG.get())
 MOVIES_DIRS_MAP = CONFIG.get_movie_dirs_map()
 TVSHOWS_DIRS_MAP = CONFIG.get_tv_dirs_map()
-
 
 staticfiles_dir = [BASE_DIR / "static"]
 # Static files (CSS, JavaScript, Images)
