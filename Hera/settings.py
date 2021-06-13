@@ -21,7 +21,7 @@ from django.core.management.commands.runserver import Command as runserver
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-runserver.default_port = os.environ.get('PORT') if type(os.environ.get('PORT')) else 8000
+runserver.default_port = os.environ.get('PORT')
 runserver.default_addr = "0.0.0.0"
 
 # Quick-start development settings - unsuitable for production
